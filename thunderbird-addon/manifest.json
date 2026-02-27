@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Unread2Calendar Todo Sidebar",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Scan unread emails, extract todo candidates, review and import to calendar.",
   "browser_specific_settings": {
     "gecko": {

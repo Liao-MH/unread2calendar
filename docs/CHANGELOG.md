@@ -7,6 +7,36 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.2 - 2026-02-27
+
+### 用户问题
+- README 需要提供最新版本的一键直链下载地址。
+
+### 讨论与决策摘要
+- 在中英文 README 的安装章节直接放置 Release 附件下载链接，便于用户无需翻页即可安装。
+
+### 已做改动
+- 版本号升级到 `2.0.2`。
+- `README.md` / `README.en.md` 新增最新 Release 直链下载：
+  - `https://github.com/Liao-MH/unread2calendar/releases/download/v2.0.2/unread2calendar-thunderbird-2.0.2.xpi`
+- README 文档中的对应版本号更新为 `v2.0.2`。
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- （本次提交）docs(release): add direct download links and bump to 2.0.2
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.2.xpi`
+
+### 验证结果
+- 打包通过：
+  - `./scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.1 - 2026-02-27
 
 ### 用户问题
