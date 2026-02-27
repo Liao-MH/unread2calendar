@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todo Sidebar Error</title>
+  <link rel="stylesheet" href="error.css">
+</head>
+<body>
+  <main class="wrap">
+    <h1>Todo Sidebar 打开失败</h1>
+    <p id="summary" class="summary">正在读取错误详情...</p>
+    <section class="panel">
+      <h2>详细错误信息</h2>
+      <pre id="detail"></pre>
+    </section>
+    <section class="panel">
+      <h2>上下文</h2>
+      <pre id="context"></pre>
+    </section>
+    <div class="actions">
+      <button id="refreshBtn" type="button">刷新错误信息</button>
+      <button id="closeBtn" type="button">关闭</button>
+    </div>
+  </main>
+  <script src="error.js"></script>
+</body>
+</html>

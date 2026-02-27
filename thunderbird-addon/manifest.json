@@ -1,0 +1,63 @@
+{
+  "manifest_version": 2,
+  "name": "Email2Calendar Todo Sidebar",
+  "version": "2.0.0",
+  "description": "Scan unread emails, extract todo candidates, review and import to calendar.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "email2calendar@addon.local",
+      "strict_min_version": "128.0"
+    }
+  },
+  "icons": {
+    "64": "icons/icon-64.png"
+  },
+  "permissions": [
+    "storage",
+    "calendarsRead",
+    "calendarsWrite",
+    "accountsRead",
+    "menus",
+    "messagesRead",
+    "messagesModify",
+    "messagesUpdate",
+    "downloads",
+    "tabs",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "common/calendar-utils.js",
+      "common/appearance.js",
+      "background.js"
+    ]
+  },
+  "experiment_apis": {
+    "TbCalendarAccess": {
+      "schema": "api/tbCalendarAccess/schema.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "paths": [
+          [
+            "TbCalendarAccess"
+          ]
+        ],
+        "script": "api/tbCalendarAccess/implementation.js"
+      }
+    }
+  },
+  "browser_action": {
+    "default_title": "Todo Sidebar",
+    "default_popup": "sidebar/panel.html"
+  },
+  "message_display_action": {
+    "default_title": "Todo Sidebar",
+    "default_popup": "sidebar/panel.html"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  }
+}

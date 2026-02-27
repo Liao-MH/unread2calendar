@@ -1,0 +1,31 @@
+[
+  {
+    "namespace": "TbMailPane",
+    "functions": [
+      {
+        "name": "show",
+        "type": "function",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "hide",
+        "type": "function",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "toggle",
+        "type": "function",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getState",
+        "type": "function",
+        "parameters": [],
+        "async": true
+      }
+    ]
+  }
+]

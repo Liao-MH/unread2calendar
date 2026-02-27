@@ -1,0 +1,79 @@
+[
+  {
+    "namespace": "TbCalendarAccess",
+    "functions": [
+      {
+        "name": "listCalendars",
+        "type": "function",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getLastError",
+        "type": "function",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "openCalendarAt",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "isoDate",
+            "type": "string"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "createEvents",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "calendarId",
+            "type": "string"
+          },
+          {
+            "name": "events",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "startDate": {
+                  "type": "string"
+                },
+                "endDate": {
+                  "type": "string"
+                },
+                "startLocal": {
+                  "type": "string",
+                  "optional": true
+                },
+                "endLocal": {
+                  "type": "string",
+                  "optional": true
+                },
+                "importTimeZone": {
+                  "type": "string",
+                  "optional": true
+                },
+                "location": {
+                  "type": "string",
+                  "optional": true
+                },
+                "description": {
+                  "type": "string",
+                  "optional": true
+                }
+              }
+            }
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]

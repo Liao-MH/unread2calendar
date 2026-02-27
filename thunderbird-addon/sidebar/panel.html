@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Email2Calendar</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <div class="app-shell">
+    <div class="top-fixed">
+      <header class="topbar">
+        <button id="scanBtn" class="primary">Scan Unread</button>
+        <button id="refreshBtn">Refresh</button>
+        <button id="expandAllBtn">Expand/Collapse All</button>
+        <button id="llmBtn">LLM</button>
+        <button id="clearBtn">Clear</button>
+      </header>
+      <div class="taskbar">
+        <button id="pauseTaskBtn">Pause</button>
+        <button id="resumeTaskBtn">Resume</button>
+        <button id="cancelTaskBtn">Cancel</button>
+      </div>
+
+      <section id="setupHint" class="hint" hidden>LLM not configured. Running local rules.</section>
+      <section id="contextBox" class="context-box"></section>
+    </div>
+
+    <main id="groups" class="groups"></main>
+
+    <footer class="footer">
+      <button id="importBtn" class="primary">Import Calendar</button>
+      <section id="importedHost" class="imported-host"></section>
+      <div id="statusBox" class="status-box"></div>
+      <div id="versionLine" class="version-line"></div>
+    </footer>
+  </div>
+
+  <section id="accountPicker" class="account-picker" hidden>
+    <div class="picker-card">
+      <h3 id="accountPickerTitle">选择扫描账号</h3>
+      <div id="accountList" class="account-list"></div>
+      <div id="accountPickerHint" class="picker-hint"></div>
+      <div class="picker-actions">
+        <button id="cancelScanBtn" type="button">取消</button>
+        <button id="confirmScanBtn" type="button" class="primary">开始扫描</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="calendarPicker" class="account-picker" hidden>
+    <div class="picker-card">
+      <h3 id="calendarPickerTitle">选择导入日历</h3>
+      <div id="calendarList" class="account-list"></div>
+      <div id="calendarPickerHint" class="picker-hint"></div>
+      <div class="picker-actions">
+        <button id="cancelImportBtn" type="button">取消</button>
+        <button id="confirmImportBtn" type="button" class="primary">确认导入</button>
+      </div>
+    </div>
+  </section>
+
+  <template id="groupTpl">
+    <section class="group">
+      <div class="group-header">
+        <div class="group-head-left">
+          <h3 class="group-title"></h3>
+          <span class="group-count"></span>
+        </div>
+        <button type="button" class="group-toggle"></button>
+      </div>
+      <div class="group-items"></div>
+    </section>
+  </template>
+
+  <template id="itemTpl">
+    <article class="item">
+      <div class="item-main">
+        <h4 class="item-title"></h4>
+        <p class="item-time"></p>
+        <p class="item-location"></p>
+      </div>
+      <div class="item-actions"></div>
+      <div class="duplicate-box" hidden></div>
+    </article>
+  </template>
+
+  <script src="../common/appearance.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>
