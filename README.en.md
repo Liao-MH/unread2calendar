@@ -23,7 +23,7 @@ Typical scenarios:
 - Scan unread mail and extract talks, classes, activities, reminders.
 - Separate potentially important personal messages into a dedicated group.
 - Review every extracted item before calendar import.
-- Keep a 30-day import history for audit and validation.
+- Keep a 30-day import history for audit and validation. (If you want to use apple calendar, here could be the tutorial: www.youtube.com/watch?v=hBXJKkMuXZ0)
 
 ## Core Capabilities
 - Extraction entry points:
