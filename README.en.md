@@ -1,4 +1,4 @@
-# Email2Calendar Todo Sidebar
+# Unread2Calendar Todo Sidebar
 
 [中文](./README.md) | [English](./README.en.md)
 
@@ -17,7 +17,7 @@
 - [Version & Updates](#version--updates)
 
 ## Overview
-`Email2Calendar Todo Sidebar` scans email content, extracts potential tasks/events, lets you review decisions, then imports accepted items into Thunderbird Calendar.
+`Unread2Calendar Todo Sidebar` scans email content, extracts potential tasks/events, lets you review decisions, then imports accepted items into Thunderbird Calendar.
 
 Typical scenarios:
 - Scan unread mail and extract talks, classes, activities, reminders.
@@ -53,7 +53,7 @@ Typical scenarios:
 Build artifacts are in `dist/`.
 
 Example current package:
-- `dist/email2calendar-thunderbird-2.0.0.xpi`
+- `dist/unread2calendar-thunderbird-2.0.1.xpi`
 
 ### 2) Install in Thunderbird
 1. Open Thunderbird.
@@ -218,5 +218,5 @@ Local model notes:
 - Dev changelog: `docs/CHANGELOG.md`
 
 ## Version & Updates
-- This README targets add-on version: `v2.0.0`
+- This README targets add-on version: `v2.0.1`
 - Full release history: [docs/CHANGELOG.md](./docs/CHANGELOG.md)

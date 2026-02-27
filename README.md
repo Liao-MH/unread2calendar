@@ -1,4 +1,4 @@
-# Email2Calendar Todo Sidebar
+# Unread2Calendar Todo Sidebar
 
 [中文](./README.md) | [English](./README.en.md)
 
@@ -17,7 +17,7 @@
 - [版本与更新](#版本与更新)
 
 ## 插件简介
-`Email2Calendar Todo Sidebar` 用于从邮件中识别潜在待办/活动事件，并在你确认后导入 Thunderbird 日历。
+`Unread2Calendar Todo Sidebar` 用于从邮件中识别潜在待办/活动事件，并在你确认后导入 Thunderbird 日历。
 
 典型场景：
 - 扫描未读邮件，自动抽取讲座、课程、活动、报名提醒等。
@@ -55,7 +55,7 @@
 当前仓库打包产物目录：`dist/`
 
 例如当前版本：
-- `dist/email2calendar-thunderbird-2.0.0.xpi`
+- `dist/unread2calendar-thunderbird-2.0.1.xpi`
 
 ### 2) 在 Thunderbird 安装
 1. 打开 Thunderbird。
@@ -233,7 +233,7 @@
 - 开发日志：`docs/CHANGELOG.md`
 
 ## 版本与更新
-- 当前文档对应插件版本：`v2.0.0`
+- 当前文档对应插件版本：`v2.0.1`
 - 历史改动与每版说明：见 [docs/CHANGELOG.md](./docs/CHANGELOG.md)
 
 ---

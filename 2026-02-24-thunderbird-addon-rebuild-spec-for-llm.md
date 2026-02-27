@@ -1,4 +1,4 @@
-# Email2Calendar Thunderbird 插件从零重建规格书（LLM/开发专用）
+# Unread2Calendar Thunderbird 插件从零重建规格书（LLM/开发专用）
 
 日期：2026-02-24  
 目标：让任意大模型或新开发者在无上下文情况下，从零重建“同款能力插件”  
@@ -63,7 +63,7 @@ thunderbird-addon/
 scripts/
   build_thunderbird_xpi.sh
 dist/
-  email2calendar-thunderbird-<version>.xpi
+  unread2calendar-thunderbird-<version>.xpi
 ```
 
 ---
@@ -366,7 +366,7 @@ node --check thunderbird-addon/options/options.js
 ```bash
 ./scripts/build_thunderbird_xpi.sh
 ```
-4. 验证产物存在：`dist/email2calendar-thunderbird-<version>.xpi`。  
+4. 验证产物存在：`dist/unread2calendar-thunderbird-<version>.xpi`。  
 5. 安装新包前建议先卸载旧版本，避免缓存。
 
 ---

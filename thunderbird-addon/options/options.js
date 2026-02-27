@@ -551,7 +551,7 @@ const FIELD_HELP_TEXT_ZH = Object.freeze({
 });
 
 function appearanceApi() {
-  return globalThis.Email2CalendarAppearance;
+  return globalThis.Unread2CalendarAppearance;
 }
 
 function attachFieldHelpText() {
@@ -1833,7 +1833,7 @@ async function exportSettings() {
     const settings = collectAllSettingsPayload();
     const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const filename = `email2calendar-settings-${Date.now()}.json`;
+    const filename = `unread2calendar-settings-${Date.now()}.json`;
     await browser.downloads.download({ url, filename, saveAs: true });
     if (ioStatus) ioStatus.textContent = t('exportOk');
     showIoPopup(true, t('exportOk'));

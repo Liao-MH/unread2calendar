@@ -17,7 +17,7 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 mkdir -p "$DIST_DIR"
-OUT="$DIST_DIR/email2calendar-thunderbird-$VERSION.xpi"
+OUT="$DIST_DIR/unread2calendar-thunderbird-$VERSION.xpi"
 rm -f "$OUT"
 
 (

@@ -131,7 +131,7 @@ const DEFAULT_PROCESSING_SETTINGS = Object.freeze({
   llmRetryCount: 1,
   llmBatchDelayMs: 100
 });
-const APPEARANCE_API = globalThis.Email2CalendarAppearance || null;
+const APPEARANCE_API = globalThis.Unread2CalendarAppearance || null;
 
 const state = {
   selectedTodoId: null,
@@ -2235,11 +2235,11 @@ function alarmBlocks(policy) {
 }
 
 function buildICS(items) {
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//email2calendar//thunderbird-addon//EN'];
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//unread2calendar//thunderbird-addon//EN'];
 
   for (const item of items) {
     const ev = toEventPayload(item);
-    const uid = `${item.id}@email2calendar.addon`;
+    const uid = `${item.id}@unread2calendar.addon`;
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:${uid}`);
     lines.push(`DTSTAMP:${dateToICS(new Date())}`);
@@ -2263,7 +2263,7 @@ async function downloadICS(items) {
   try {
     await browser.downloads.download({
       url,
-      filename: `email2calendar-${new Date().toISOString().slice(0, 10)}.ics`,
+      filename: `unread2calendar-${new Date().toISOString().slice(0, 10)}.ics`,
       saveAs: true
     });
   } finally {

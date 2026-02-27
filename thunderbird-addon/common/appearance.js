@@ -242,7 +242,7 @@
     }
   }
 
-  global.Email2CalendarAppearance = {
+  global.Unread2CalendarAppearance = {
     DEFAULT_APPEARANCE: clone(DEFAULT_APPEARANCE),
     PRESETS: clone(PRESETS),
     normalizeAppearance,

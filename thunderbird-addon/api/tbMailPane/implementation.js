@@ -2,8 +2,8 @@
 
 (function(exports) {
   const STORE = {
-    visible: "extensions.email2calendar.pane.visible",
-    width: "extensions.email2calendar.pane.width"
+    visible: "extensions.unread2calendar.pane.visible",
+    width: "extensions.unread2calendar.pane.width"
   };
 
   const UI = {

@@ -358,7 +358,7 @@ function format(templateKey, values) {
 }
 
 function applyAppearance(appearance) {
-  const api = globalThis.Email2CalendarAppearance;
+  const api = globalThis.Unread2CalendarAppearance;
   if (!api) return;
   const vars = api.toCssVariables(appearance || api.DEFAULT_APPEARANCE);
   api.applyCssVariables(document.documentElement, vars);

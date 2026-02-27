@@ -7,6 +7,53 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.1 - 2026-02-27
+
+### 用户问题
+- 统一将开发与发布中涉及 `email2calendar` 的命名改为 `unread2calendar`。
+- 历史条目按实际情况保留，同时记录本次更名改动。
+
+### 讨论与决策摘要
+- 扩展 ID 采用新命名：`unread2calendar@addon.local`（按你之前决策，不做兼容旧 ID 的升级迁移）。
+- 历史日志不回写旧版本条目，仅新增本版本记录。
+
+### 已做改动
+- 版本号升级到 `2.0.1`。
+- 用户可见与发布相关命名统一为 `Unread2Calendar` / `unread2calendar`：
+  - 插件显示名、配置导出文件名、XPI 产物文件名、ICS 生成标识与默认文件名。
+  - 构建脚本输出名由 `email2calendar-thunderbird-*` 改为 `unread2calendar-thunderbird-*`。
+  - README（中英）与三份 Thunderbird 设计文档中的产品名和产物名示例同步更新。
+- 内部标识同步更名：
+  - manifest `browser_specific_settings.gecko.id` 改为 `unread2calendar@addon.local`。
+  - 窗格偏好键由 `extensions.email2calendar.*` 改为 `extensions.unread2calendar.*`。
+  - 外观全局对象由 `Email2CalendarAppearance` 改为 `Unread2CalendarAppearance`。
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/common/appearance.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.html`
+- `thunderbird-addon/options/options.js`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `scripts/build_thunderbird_xpi.sh`
+- `README.md`
+- `README.en.md`
+- `2026-02-24-thunderbird-addon-dev-checklist.md`
+- `2026-02-24-thunderbird-addon-prd-and-design-detailed.md`
+- `2026-02-24-thunderbird-addon-rebuild-spec-for-llm.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- （本次提交）chore(rename): unify branding and ids to unread2calendar
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.1.xpi`
+
+### 验证结果
+- 打包通过：
+  - `./scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.0 - 2026-02-27
 
 ### 用户问题

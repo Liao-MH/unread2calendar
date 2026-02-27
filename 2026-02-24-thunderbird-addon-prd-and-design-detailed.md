@@ -1,4 +1,4 @@
-# Email2Calendar Thunderbird 插件 PRD + 设计详细版
+# Unread2Calendar Thunderbird 插件 PRD + 设计详细版
 
 日期：2026-02-24  
 版本基线：`0.6.0`  

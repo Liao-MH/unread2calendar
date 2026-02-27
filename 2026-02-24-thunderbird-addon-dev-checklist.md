@@ -15,7 +15,7 @@
   - `node --check thunderbird-addon/options/options.js`
 - [ ] 升版本号：`thunderbird-addon/manifest.json`。  
 - [ ] 打包：`./scripts/build_thunderbird_xpi.sh`。  
-- [ ] 确认产物：`dist/email2calendar-thunderbird-<version>.xpi`。  
+- [ ] 确认产物：`dist/unread2calendar-thunderbird-<version>.xpi`。  
 - [ ] UI 内显示版本号，避免误装旧包。
 
 ---
