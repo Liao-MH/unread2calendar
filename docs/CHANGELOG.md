@@ -7,6 +7,57 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.3 - 2026-03-06
+
+### 用户问题
+- LLM 处理过程中会覆盖已决策事项状态。
+- 处理结束后状态栏希望显示：已处理邮件数、识别事件数、总耗时与 LLM 耗时。
+- 鼠标离开 unread2calendar 主浮窗时自动降为 30% 不透明度，移回后恢复 100%。
+
+### 讨论与决策摘要
+- 已决策保护采用“同一轮识别任务内保护、下一轮允许重置”。
+- 结束文案同时展示总耗时和 LLM 耗时。
+- 透明度触发口径采用“仅基于鼠标是否离开主浮窗区域”。
+
+### 已做改动
+- 版本号升级到 `2.0.3`。
+- 扫描流程新增轮次与耗时状态：
+  - `state.scan.roundId`、`state.scan.startedAtMs`、`state.scan.llmElapsedMs`。
+- 已决策状态保护改为“同轮锁定”：
+  - 决策动作写入 `decisionRoundId`；
+  - 合并扫描结果时，仅阻止覆盖“编辑项”与“同轮已决策项”；
+  - 跨轮识别允许对历史决策状态重建为最新待办状态。
+- 修复扫描并发覆盖问题：
+  - 每次写入识别结果前都先读取最新 todos 再合并，避免旧快照覆盖用户刚执行的决策。
+- 状态栏结束文案升级：
+  - 显示“已处理 X 封邮件，识别到 X 个事件，用时 xx分xx秒（LLM xx分xx秒）”。
+- 浮窗透明度交互新增：
+  - 鼠标离开窗口 `opacity=0.3`；
+  - 鼠标移回窗口 `opacity=1`；
+  - 增加透明度过渡动画。
+
+### 影响文件
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `thunderbird-addon/manifest.json`
+- `tests/scan-lock-summary-opacity.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- （本次提交）fix(scan): preserve same-round decisions, add final timing summary and window opacity hover behavior
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.3.xpi`
+
+### 验证结果
+- 测试通过：
+  - `node --test tests/*.test.mjs`
+- 打包通过：
+  - `./scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.2 - 2026-02-27
 
 ### 用户问题

@@ -23,7 +23,7 @@
 - 扫描未读邮件，自动抽取讲座、课程、活动、报名提醒等。
 - 将“可能重要但不一定是活动”的邮件单独归组处理。
 - 对每条识别结果执行“确认/拒绝/标记已读/转为待办”等决策。
-- 最终批量导入到指定日历，并保留近 30 天导入记录。 （如需同步苹果日历，可参考此教程：www.youtube.com/watch?v=hBXJKkMuXZ0）
+- 最终批量导入到指定日历，并保留近 30 天导入记录。
 
 ## 核心能力
 - 识别入口：
@@ -55,9 +55,9 @@
 当前仓库打包产物目录：`dist/`
 
 例如当前版本：
-- `dist/unread2calendar-thunderbird-2.0.2.xpi`
+- `dist/unread2calendar-thunderbird-2.0.3.xpi`
 - 最新 Release 直链下载：
-  - `https://github.com/Liao-MH/unread2calendar/releases/download/v2.0.2/unread2calendar-thunderbird-2.0.2.xpi`
+  - `https://github.com/Liao-MH/unread2calendar/releases/download/v2.0.3/unread2calendar-thunderbird-2.0.3.xpi`
 
 ### 2) 在 Thunderbird 安装
 1. 打开 Thunderbird。
@@ -235,7 +235,7 @@
 - 开发日志：`docs/CHANGELOG.md`
 
 ## 版本与更新
-- 当前文档对应插件版本：`v2.0.2`
+- 当前文档对应插件版本：`v2.0.3`
 - 历史改动与每版说明：见 [docs/CHANGELOG.md](./docs/CHANGELOG.md)
 
 ---

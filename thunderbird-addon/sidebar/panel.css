@@ -44,6 +44,7 @@ body {
   box-sizing: border-box;
   overflow: hidden;
   height: min(86vh, 760px);
+  transition: opacity 120ms ease;
 }
 
 .app-shell {

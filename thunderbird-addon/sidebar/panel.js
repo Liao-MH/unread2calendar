@@ -407,6 +407,12 @@ function applyScrollTop(value) {
   el.groups.scrollTop = Math.max(0, top);
 }
 
+function applyWindowOpacity(value) {
+  const opacity = Number(value);
+  if (!Number.isFinite(opacity)) return;
+  document.body.style.opacity = String(Math.max(0.2, Math.min(1, opacity)));
+}
+
 function loadUiState() {
   try {
     const raw = localStorage.getItem(PANEL_UI_STATE_KEY);
@@ -1322,7 +1328,10 @@ el.groups.addEventListener('scroll', () => {
   saveUiState();
 });
 window.addEventListener('beforeunload', saveUiState);
+window.addEventListener('mouseleave', () => applyWindowOpacity(0.3));
+window.addEventListener('mouseenter', () => applyWindowOpacity(1));
 
 applyStaticText();
 loadUiState();
+applyWindowOpacity(WINDOW_OPACITY_ACTIVE);
 refresh().catch((error) => actionError(t('loadFailed'), error));

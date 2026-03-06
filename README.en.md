@@ -23,7 +23,7 @@ Typical scenarios:
 - Scan unread mail and extract talks, classes, activities, reminders.
 - Separate potentially important personal messages into a dedicated group.
 - Review every extracted item before calendar import.
-- Keep a 30-day import history for audit and validation. (If you want to use apple calendar, here could be the tutorial: www.youtube.com/watch?v=hBXJKkMuXZ0)
+- Keep a 30-day import history for audit and validation.
 
 ## Core Capabilities
 - Extraction entry points:
@@ -53,9 +53,9 @@ Typical scenarios:
 Build artifacts are in `dist/`.
 
 Example current package:
-- `dist/unread2calendar-thunderbird-2.0.2.xpi`
+- `dist/unread2calendar-thunderbird-2.0.3.xpi`
 - Latest release direct download:
-  - `https://github.com/Liao-MH/unread2calendar/releases/download/v2.0.2/unread2calendar-thunderbird-2.0.2.xpi`
+  - `https://github.com/Liao-MH/unread2calendar/releases/download/v2.0.3/unread2calendar-thunderbird-2.0.3.xpi`
 
 ### 2) Install in Thunderbird
 1. Open Thunderbird.
@@ -220,5 +220,5 @@ Local model notes:
 - Dev changelog: `docs/CHANGELOG.md`
 
 ## Version & Updates
-- This README targets add-on version: `v2.0.2`
+- This README targets add-on version: `v2.0.3`
 - Full release history: [docs/CHANGELOG.md](./docs/CHANGELOG.md)

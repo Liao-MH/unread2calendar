@@ -136,6 +136,7 @@ const APPEARANCE_API = globalThis.Unread2CalendarAppearance || null;
 const state = {
   selectedTodoId: null,
   scan: {
+    roundId: 0,
     running: false,
     paused: false,
     cancelRequested: false,
@@ -144,6 +145,8 @@ const state = {
     processed: 0,
     extracted: 0,
     failed: 0,
+    startedAtMs: 0,
+    llmElapsedMs: 0,
     line: ''
   },
   statusText: 'Ready.',
@@ -557,6 +560,7 @@ function sleep(ms) {
 }
 
 function initRecognitionScan(total, phase) {
+  state.scan.roundId = (Number(state.scan.roundId) || 0) + 1;
   state.scan.running = true;
   state.scan.paused = false;
   state.scan.cancelRequested = false;
@@ -565,6 +569,8 @@ function initRecognitionScan(total, phase) {
   state.scan.processed = 0;
   state.scan.extracted = 0;
   state.scan.failed = 0;
+  state.scan.startedAtMs = now();
+  state.scan.llmElapsedMs = 0;
   state.scan.line = '';
 }
 
@@ -881,12 +887,22 @@ function buildProgressLine(kind, index, total, extractedCount) {
   return zh ? `处理中 ${x}/${y}` : `Processing ${x}/${y}`;
 }
 
-function buildFinalSummaryLine(processed, extracted) {
+function formatDurationMs(ms) {
+  const totalSec = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  const zh = /^zh\b/.test(uiLangTag());
+  return zh ? `${min}分${sec}秒` : `${min}m ${sec}s`;
+}
+
+function buildFinalSummaryLine(processed, extracted, totalMs, llmMs) {
   const p = Math.max(0, Number(processed) || 0);
   const e = Math.max(0, Number(extracted) || 0);
+  const total = formatDurationMs(totalMs);
+  const llm = formatDurationMs(llmMs);
   return /^zh\b/.test(uiLangTag())
-    ? `已处理 ${p} 封邮件，识别到 ${e} 个事件`
-    : `Processed ${p} emails, recognized ${e} events`;
+    ? `已处理 ${p} 封邮件，识别到 ${e} 个事件，用时${total}（LLM ${llm}）`
+    : `Processed ${p} emails, recognized ${e} events, took ${total} (LLM ${llm})`;
 }
 
 function parseLooseJson(text) {
@@ -1494,6 +1510,7 @@ function createTodoFromExtract(message, extract) {
     reminderPolicy,
     edited: false,
     manualOverride: false,
+    decisionRoundId: null,
     createdAt: now(),
     updatedAt: now()
   };
@@ -1526,6 +1543,7 @@ function createNonTodoItem(message, summary) {
     reminderPolicy: 'standard_two',
     edited: false,
     manualOverride: false,
+    decisionRoundId: null,
     createdAt: now(),
     updatedAt: now()
   };
@@ -1613,7 +1631,7 @@ async function scanUnreadByAccounts(accountIds) {
   for (const folder of folders) {
     await waitIfScanPaused();
     if (state.scan.cancelRequested) {
-      state.scan.line = buildFinalSummaryLine(0, 0);
+      state.scan.line = buildFinalSummaryLine(0, 0, now() - state.scan.startedAtMs, state.scan.llmElapsedMs);
       setStatus(state.scan.line);
       stopRecognitionScan('cancelled');
       await broadcastStateChanged();
@@ -1652,7 +1670,12 @@ async function scanUnreadByAccounts(accountIds) {
   await broadcastStateChanged();
 
   stopRecognitionScan(result.cancelled ? 'cancelled' : 'done');
-  state.scan.line = buildFinalSummaryLine(state.scan.processed, state.scan.extracted);
+  state.scan.line = buildFinalSummaryLine(
+    state.scan.processed,
+    state.scan.extracted,
+    now() - state.scan.startedAtMs,
+    state.scan.llmElapsedMs
+  );
   setStatus(state.scan.line);
   await broadcastStateChanged();
 }
@@ -1671,7 +1694,12 @@ async function stopRunningRecognitionIfNeeded() {
 
 function mergeScannedItems(existing, scanned) {
   const kept = existing.filter((t) => t.status !== 'done');
+  const currentRoundId = Number(state.scan.roundId) || 0;
   const keyToIndex = new Map();
+  const isDecisionStatus = (status) => ['queued', 'rejected', 'read_marked', 'converted', 'seen'].includes(String(status || ''));
+  const isSameRoundDecisionLock = (item) =>
+    !!(item && item.manualOverride && Number(item.decisionRoundId) > 0 && Number(item.decisionRoundId) === currentRoundId);
+
   const itemKey = (item) => {
     if (item && item.kind === 'non_todo') {
       return `${item.sourceMessageId}::non_todo`;
@@ -1690,7 +1718,7 @@ function mergeScannedItems(existing, scanned) {
     const inKind = String((incoming && incoming.kind) || '');
     if (!inSource || !inKind) return false;
     return kept.some((old) => {
-      if (!old || !old.manualOverride) return false;
+      if (!old || !(old.edited || isSameRoundDecisionLock(old))) return false;
       if (String(old.sourceMessageId || '') !== inSource) return false;
       if (String(old.kind || '') !== inKind) return false;
       const oldTitle = toLowerNorm(old.title);
@@ -1715,12 +1743,17 @@ function mergeScannedItems(existing, scanned) {
 
     const idx = keyToIndex.get(key);
     const existingItem = kept[idx];
-    if (!existingItem || existingItem.manualOverride || existingItem.edited || existingItem.status !== 'pending') {
+    if (!existingItem) {
       continue;
     }
+    if (existingItem.edited || isSameRoundDecisionLock(existingItem)) continue;
+    if (existingItem.status !== 'pending' && !isDecisionStatus(existingItem.status)) continue;
 
     kept[idx] = {
       ...existingItem,
+      status: 'pending',
+      manualOverride: false,
+      decisionRoundId: null,
       title: item.title,
       startText: item.startText,
       endText: item.endText,
@@ -2333,7 +2366,6 @@ async function extractFromMessages(messages, options) {
     return { processed: 0, extracted: 0, ignored: 0, failed: 0, cancelled: false };
   }
 
-  let workingTodos = await getTodos();
   let extracted = 0;
   let processed = 0;
   let ignored = 0;
@@ -2382,10 +2414,13 @@ async function extractFromMessages(messages, options) {
         while (attempt <= retryCount) {
           await waitIfScanPaused();
           if (state.scan.cancelRequested) throw makeCancelledError();
+          const llmStartedAt = now();
           try {
             llmResult = await llmExtract(payload, settings);
+            state.scan.llmElapsedMs += Math.max(0, now() - llmStartedAt);
             break;
           } catch (error) {
+            state.scan.llmElapsedMs += Math.max(0, now() - llmStartedAt);
             attempt += 1;
             if (attempt > retryCount) throw error;
           }
@@ -2404,13 +2439,15 @@ async function extractFromMessages(messages, options) {
             llmRuleKeywordsChanged = true;
           }
           const newTodos = validEvents.map((ev) => createTodoFromExtract(message, ev));
-          workingTodos = recomputeDuplicates(mergeScannedItems(workingTodos, newTodos));
+          const latestTodos = await getTodos();
+          const workingTodos = recomputeDuplicates(mergeScannedItems(latestTodos, newTodos));
           await setTodos(workingTodos);
           extracted += validEvents.length;
           await progressTick(buildProgressLine('returned', index, list.length, validEvents.length));
         } else {
           const nonTodo = createNonTodoItem(message, llmResult.nonTodoSummary || fallbackNonTodoSummary(payload));
-          workingTodos = recomputeDuplicates(mergeScannedItems(workingTodos, [nonTodo]));
+          const latestTodos = await getTodos();
+          const workingTodos = recomputeDuplicates(mergeScannedItems(latestTodos, [nonTodo]));
           await setTodos(workingTodos);
           ignored += 1;
           await progressTick(buildProgressLine('returned', index, list.length, 0));
@@ -2441,13 +2478,15 @@ async function extractFromMessages(messages, options) {
       try {
         const extract = localExtract(message, localRules);
         if (extract && extract.kind !== 'ignore') {
-          workingTodos = recomputeDuplicates(mergeScannedItems(workingTodos, [createTodoFromExtract(message, extract)]));
+          const latestTodos = await getTodos();
+          const workingTodos = recomputeDuplicates(mergeScannedItems(latestTodos, [createTodoFromExtract(message, extract)]));
           await setTodos(workingTodos);
           extracted += 1;
           await progressTick(buildProgressLine('returned', index, list.length, 1));
         } else {
           const nonTodo = createNonTodoItem(message, fallbackNonTodoSummary(message));
-          workingTodos = recomputeDuplicates(mergeScannedItems(workingTodos, [nonTodo]));
+          const latestTodos = await getTodos();
+          const workingTodos = recomputeDuplicates(mergeScannedItems(latestTodos, [nonTodo]));
           await setTodos(workingTodos);
           ignored += 1;
           await progressTick(buildProgressLine('returned', index, list.length, 0));
@@ -2476,7 +2515,7 @@ async function extractFromMessages(messages, options) {
     }
   }
   stopRecognitionScan(cancelled ? 'cancelled' : 'done');
-  state.scan.line = buildFinalSummaryLine(processed, extracted);
+  state.scan.line = buildFinalSummaryLine(processed, extracted, now() - state.scan.startedAtMs, state.scan.llmElapsedMs);
   setStatus(state.scan.line);
   await progressTick();
 
@@ -2713,6 +2752,10 @@ function patchTodo(item, patch) {
   };
 }
 
+function currentDecisionRoundId() {
+  return state.scan.running ? (Number(state.scan.roundId) || null) : null;
+}
+
 async function updateTodo(todoId, patch) {
   const todos = await getTodos();
   const updated = recomputeDuplicates(todos.map((item) => {
@@ -2727,7 +2770,7 @@ async function queueTodo(todoId) {
   const updated = recomputeDuplicates(todos.map((item) => {
     if (item.id !== todoId || item.kind !== 'todo') return item;
     if (item.status === 'pending' || item.status === 'rejected') {
-      return patchTodo(item, { status: 'queued', manualOverride: true });
+      return patchTodo(item, { status: 'queued', manualOverride: true, decisionRoundId: currentDecisionRoundId() });
     }
     return item;
   }));
@@ -2739,7 +2782,7 @@ async function rejectTodo(todoId) {
   const updated = recomputeDuplicates(todos.map((item) => {
     if (item.id !== todoId || item.kind !== 'todo') return item;
     if (item.status === 'pending' || item.status === 'queued') {
-      return patchTodo(item, { status: 'rejected', manualOverride: true });
+      return patchTodo(item, { status: 'rejected', manualOverride: true, decisionRoundId: currentDecisionRoundId() });
     }
     return item;
   }));
@@ -2751,7 +2794,7 @@ async function restoreTodo(todoId) {
   const updated = recomputeDuplicates(todos.map((item) => {
     if (item.id !== todoId || item.kind !== 'todo') return item;
     if (item.status === 'rejected') {
-      return patchTodo(item, { status: 'pending', manualOverride: false });
+      return patchTodo(item, { status: 'pending', manualOverride: false, decisionRoundId: null });
     }
     return item;
   }));
@@ -2765,7 +2808,7 @@ async function markImportantRead(todoId) {
     if (item.id !== todoId || item.kind !== 'important') return item;
     msgId = item.sourceMessageId;
     if (item.status === 'pending') {
-      return patchTodo(item, { status: 'read_marked', manualOverride: true });
+      return patchTodo(item, { status: 'read_marked', manualOverride: true, decisionRoundId: currentDecisionRoundId() });
     }
     return item;
   }));
@@ -2779,7 +2822,7 @@ async function markNonTodoSeen(todoId) {
   const updated = recomputeDuplicates(todos.map((item) => {
     if (item.id !== todoId || item.kind !== 'non_todo') return item;
     if (item.status === 'unseen') {
-      return patchTodo(item, { status: 'seen', manualOverride: true });
+      return patchTodo(item, { status: 'seen', manualOverride: true, decisionRoundId: currentDecisionRoundId() });
     }
     return item;
   }));
@@ -2818,12 +2861,13 @@ async function convertImportant(todoId, payload) {
       reminderPolicy: payload.startText ? 'standard_two' : 'fallback_plus_1h',
       edited: true,
       manualOverride: true,
+      decisionRoundId: null,
       createdAt: now(),
       updatedAt: now()
     };
 
     additional.push(newTodo);
-    return patchTodo(item, { status: 'converted', manualOverride: true });
+    return patchTodo(item, { status: 'converted', manualOverride: true, decisionRoundId: currentDecisionRoundId() });
   });
 
   await setTodos(recomputeDuplicates([...updated, ...additional]));
