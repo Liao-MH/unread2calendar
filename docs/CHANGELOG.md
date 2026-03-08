@@ -7,6 +7,51 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.7 - 2026-03-08
+
+### 用户问题
+- 第四栏仍停留在 `Loading Todo Sidebar...`
+- 点击 `Retry` 后，错误控制台报出 `ReferenceError: URL is not defined`
+- 需要确认这是否才是第四栏功能页未真正装载的直接根因
+
+### 讨论与决策摘要
+- 错误控制台已经给出明确根因：`TbMailPane` parent experiment 里调用了全局 `URL`
+- 在 Thunderbird experiment parent 环境中，这个全局不可用，因此 `buildPanelSrc()` 在装载面板前就抛异常
+- `calendarsRead/calendarsWrite` 的 manifest warning 不是这次第四栏白屏/卡 loading 的直接根因
+- 本次只修这个确定根因，不混入其他权限体系调整
+
+### 已做改动
+- 版本号升级到 `2.0.7`
+- `api/tbMailPane/implementation.js`
+  - 将 `buildPanelSrc()` 从 `new URL(...)` 改为父进程安全的字符串拼接
+  - 保留 `layout=mailpane` 和 `mailpaneToken` 传参，但不再依赖全局 `URL` 构造器
+- `tests/mailpane-fallback.test.mjs`
+  - 新增断言：mailpane parent implementation 不得依赖 `new URL(...)`
+  - 同步更新对 `mailpaneToken` 传参方式的覆盖
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.7`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-fallback.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.7.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.6 - 2026-03-08
 
 ### 用户问题

@@ -111,10 +111,9 @@
   }
 
   function buildPanelSrc(token) {
-    const url = new URL(`${extensionBase}sidebar/panel.html`);
-    url.searchParams.set("layout", "mailpane");
-    url.searchParams.set("mailpaneToken", String(token || ""));
-    return url.href;
+    const base = `${extensionBase}sidebar/panel.html`;
+    const query = `layout=mailpane&mailpaneToken=${encodeURIComponent(String(token || ""))}`;
+    return `${base}?${query}`;
   }
 
   function clearLoadTimer(paneState) {
