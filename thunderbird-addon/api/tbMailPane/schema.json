@@ -25,6 +25,17 @@
         "type": "function",
         "parameters": [],
         "async": true
+      },
+      {
+        "name": "showFailureAlert",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "async": true
       }
     ]
   }

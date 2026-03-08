@@ -7,6 +7,61 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.5 - 2026-03-08
+
+### 用户问题
+- 点击插件按钮后，第四栏没有显示出来。
+- Thunderbird 错误控制台提示“解析 `display` 的值时出错。声明被丢弃”。
+- 第四栏打开失败时，不应静默回退到 tab，而应直接给出原生告警。
+
+### 讨论与决策摘要
+- 本次按“最小修复”处理，只修宿主显示机制和失败诊断，不扩展为更大范围重构。
+- 按用户确认，按钮点击失败时只弹简短原生告警，不显示底层异常细节。
+- 按用户确认，第四栏成功标准只看“宿主容器已插入且可见”；未可见即硬失败。
+- 主仓库 `dist/` 已存在非本次生成的 `2.0.4` 包，因此版本直接升级为 `2.0.5`，避免覆盖未知产物。
+
+### 已做改动
+- 版本号升级到 `2.0.5`。
+- `background.js`
+  - 移除 `tabs.create(...)` 回退，避免掩盖第四栏注入失败。
+  - 打开逻辑统一改为显式 `show()`，不再对工具栏按钮执行 toggle-hide。
+  - 在调用 `TbMailPane.show()` 后追加 `getState()` 可见性校验；宿主未真正显示时直接判定失败。
+  - 新增“第四栏打开失败”的原生告警调用。
+- `api/tbMailPane/schema.json`
+  - 新增 `showFailureAlert(message)` experiment 接口。
+- `api/tbMailPane/implementation.js`
+  - 宿主显隐从无效的 `display: -moz-box` 切换为 `hidden` 状态控制。
+  - 新增真实可见性检查，基于宿主是否连接、是否隐藏、计算样式和几何尺寸综合判定。
+  - `show()` / `toggle()` 在要求显示时会等待宿主进入可见状态，否则抛出失败。
+  - 新增基于 Thunderbird 原生 prompt 的失败告警桥接。
+- `tests/mailpane-open-flow.test.mjs`
+  - 新增对“无 tab 回退”“show 后硬校验可见性”“原生告警接口”“不再使用 `-moz-box`”的覆盖。
+- `README.md` / `README.en.md`
+  - 更新当前包版本和下载链接到 `v2.0.5`。
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.5.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.3 - 2026-03-08
 
 ### 用户问题

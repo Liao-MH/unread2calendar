@@ -75,6 +75,16 @@
     return Math.max(UI.minWidth, Math.min(UI.maxWidth, n));
   }
 
+  function nextFrame(win) {
+    return new Promise((resolve) => {
+      try {
+        win.requestAnimationFrame(() => resolve());
+      } catch (_) {
+        win.setTimeout(resolve, 16);
+      }
+    });
+  }
+
   function getMailWindows() {
     const out = [];
     const wm = getServices().wm;
@@ -89,6 +99,30 @@
   function getCurrentMailWindow() {
     const win = getServices().wm.getMostRecentWindow("mail:3pane");
     return (win && win.document) ? win : null;
+  }
+
+  function isPaneActuallyVisible(win, paneState) {
+    if (!win || !paneState || !paneState.host) return false;
+    const host = paneState.host;
+    if (!host.isConnected || host.hidden) return false;
+    try {
+      const style = win.getComputedStyle(host);
+      if (!style) return false;
+      if (style.display === "none" || style.visibility === "hidden") return false;
+      const rect = host.getBoundingClientRect();
+      return !!rect && rect.width > 0 && rect.height > 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function verifyPaneVisible(win, paneState) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (isPaneActuallyVisible(win, paneState)) return true;
+      applyPaneGeometry(win, paneState);
+      await nextFrame(win);
+    }
+    return isPaneActuallyVisible(win, paneState);
   }
 
   function todayPaneOffsetRight(doc) {
@@ -126,13 +160,13 @@
       host.setAttribute("orient", "vertical");
       host.style.position = "fixed";
       host.style.bottom = "0";
-      host.style.display = "none";
       host.style.zIndex = "2147483000";
       host.style.borderInlineStart = "1px solid color-mix(in srgb, currentColor 22%, transparent)";
       host.style.background = "var(--toolbar-bgcolor, #f3f4f6)";
       host.style.boxSizing = "border-box";
       host.style.opacity = "1";
       host.style.transition = "opacity 140ms ease";
+      host.hidden = true;
 
       frame = doc.createXULElement("browser");
       frame.setAttribute("id", UI.frameId);
@@ -152,9 +186,9 @@
       splitter.style.bottom = "0";
       splitter.style.width = "6px";
       splitter.style.cursor = "ew-resize";
-      splitter.style.display = "none";
       splitter.style.zIndex = "2147483001";
       splitter.style.background = "transparent";
+      splitter.hidden = true;
 
       doc.documentElement.appendChild(splitter);
       doc.documentElement.appendChild(host);
@@ -240,7 +274,7 @@
       splitter,
       frame,
       width: clampWidth(loadPrefInt(STORE.width, UI.defaultWidth)),
-      visible: host.style.display !== "none",
+      visible: !host.hidden,
       dragging: false
     };
     paneByWindow.set(win, existing);
@@ -266,8 +300,8 @@
     paneState.splitter.style.height = `calc(100vh - ${top}px)`;
 
     const visible = paneState.visible;
-    paneState.host.style.display = visible ? "-moz-box" : "none";
-    paneState.splitter.style.display = visible ? "-moz-box" : "none";
+    paneState.host.hidden = !visible;
+    paneState.splitter.hidden = !visible;
   }
 
   function setVisible(win, visible) {
@@ -311,7 +345,14 @@
           async show() {
             const windows = getMailWindows();
             if (!windows.length) fail("No mail:3pane window available");
-            windows.forEach((win) => setVisible(win, true));
+            for (const win of windows) {
+              setVisible(win, true);
+            }
+            const current = getCurrentMailWindow() || windows[0];
+            const paneState = current ? ensurePaneForWindow(current) : null;
+            if (!current || !paneState) fail("Mail pane host was not created");
+            const visible = await verifyPaneVisible(current, paneState);
+            if (!visible) fail("Mail pane host is still not visible after show()");
             return true;
           },
           async hide() {
@@ -325,6 +366,10 @@
             const paneState = ensurePaneForWindow(win);
             const next = !paneState.visible;
             setVisible(win, next);
+            if (next) {
+              const visible = await verifyPaneVisible(win, paneState);
+              if (!visible) fail("Mail pane host is still not visible after toggle()");
+            }
             return next;
           },
           async getState() {
@@ -333,7 +378,14 @@
               return { visible: false, width: clampWidth(loadPrefInt(STORE.width, UI.defaultWidth)) };
             }
             const paneState = ensurePaneForWindow(win);
-            return { visible: !!paneState.visible, width: clampWidth(paneState.width) };
+            return { visible: isPaneActuallyVisible(win, paneState), width: clampWidth(paneState.width) };
+          },
+          async showFailureAlert(message) {
+            const services = getServices();
+            const win = getCurrentMailWindow() || services.wm.getMostRecentWindow(null);
+            const text = String(message || "Todo Sidebar pane failed to open.");
+            services.prompt.alert(win, "Todo Sidebar", text);
+            return true;
           }
         }
       };
