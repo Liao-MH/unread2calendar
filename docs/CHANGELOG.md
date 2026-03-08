@@ -7,6 +7,54 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.12 - 2026-03-08
+
+### 用户问题
+- 在“窗口很宽但高度不足”的场景下，第四栏没有覆盖到最右侧，右边残留空白区域
+- 同一场景下，第四栏整体高度表现不稳定，内容看起来像没有完全铺满宿主行
+
+### 讨论与决策摘要
+- 根因不在 `panel.css`，而在 `TbMailPane` 宿主插入层级：当前宿主直接挂在 `tabmail-container`，没有把 `today-pane-panel` 所在右侧区域纳入同一横向容器
+- 另一个问题是宿主仍依赖 `height: 100%`，在矮窗口里不如沿共享行做 `stretch` 稳定
+- 这次修复收敛在宿主层：改用 `tabmail-container` 与 `today-pane-panel` 的共享行容器，并让宿主与分隔条沿该行拉伸
+
+### 已做改动
+- 版本号升级到 `2.0.12`
+- `api/tbMailPane/implementation.js`
+  - 新增 `getPaneInsertionPoint()`，用来选择 `tabmail-container` 和 `today-pane-panel` 的共享横向容器
+  - 宿主与分隔条不再只依赖 `tabmail-container`，而是插入到更外层共享行中
+  - 宿主与分隔条改为 `alignSelf = "stretch"`，移除几何层里的 `height = "100%"`
+  - 宽度拖拽继续沿共享容器右边界计算，避免宽窗口下右侧残留空白区域
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 先新增失败断言，要求实现显式处理 `today-pane-panel` / `today-splitter`
+  - 补充校验共享插入点函数和纵向拉伸规则
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.12`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.12.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.11 - 2026-03-08
 
 ### 用户问题

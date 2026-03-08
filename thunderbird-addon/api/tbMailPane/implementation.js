@@ -125,6 +125,29 @@
     return doc.getElementById("tabmail-container");
   }
 
+  function getPaneInsertionPoint(doc) {
+    if (!doc) return null;
+    const tabmailContainer = doc.getElementById("tabmail-container");
+    if (!tabmailContainer) return null;
+    const todayPane = doc.getElementById("today-pane-panel");
+    const todaySplitter = doc.getElementById("today-splitter");
+    const tabmailRow = tabmailContainer.parentNode;
+    if (todayPane && todayPane.parentNode && tabmailRow && todayPane.parentNode === tabmailRow) {
+      return {
+        container: tabmailRow,
+        tabmailContainer,
+        todayPane,
+        todaySplitter
+      };
+    }
+    return {
+      container: tabmailRow || tabmailContainer,
+      tabmailContainer,
+      todayPane,
+      todaySplitter
+    };
+  }
+
   function buildPanelSrc(token) {
     const base = `${extensionBase}sidebar/panel.html`;
     const query = `layout=mailpane&mailpaneToken=${encodeURIComponent(String(token || ""))}`;
@@ -302,7 +325,8 @@
     let retryButton = doc.getElementById(UI.retryButtonId);
 
     if (!host) {
-      const paneContainer = getPaneContainer(doc);
+      const insertionPoint = getPaneInsertionPoint(doc);
+      const paneContainer = insertionPoint && insertionPoint.container;
       if (!paneContainer) return null;
       host = doc.createXULElement("vbox");
       host.setAttribute("id", UI.hostId);
@@ -316,7 +340,7 @@
       host.style.maxWidth = `${UI.maxWidth}px`;
       host.style.width = `${UI.defaultWidth}px`;
       host.style.minHeight = "0";
-      host.style.height = "100%";
+      host.style.alignSelf = "stretch";
       host.style.opacity = "1";
       host.hidden = true;
 
@@ -368,6 +392,7 @@
       splitter.style.minWidth = "6px";
       splitter.style.cursor = "ew-resize";
       splitter.style.background = "transparent";
+      splitter.style.alignSelf = "stretch";
       splitter.hidden = true;
 
       paneContainer.appendChild(splitter);
@@ -489,8 +514,6 @@
     paneState.host.style.width = `${width}px`;
     paneState.host.style.minWidth = `${UI.minWidth}px`;
     paneState.host.style.maxWidth = `${UI.maxWidth}px`;
-    paneState.host.style.height = "100%";
-    paneState.splitter.style.height = "100%";
 
     const visible = shouldShowPaneInWindow(win, paneState);
     paneState.host.hidden = !visible;
