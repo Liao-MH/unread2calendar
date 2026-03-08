@@ -23,6 +23,11 @@
   let ExtensionErrorClass = Error;
   const paneByWindow = new Map();
   let extensionBase = "";
+  let extensionBrowserConfig = {
+    remote: false,
+    remoteType: "",
+    browsingContextGroupId: null
+  };
 
   function getServices() {
     if (typeof Services !== "undefined") return Services;
@@ -116,6 +121,39 @@
     return `${base}?${query}`;
   }
 
+  function whenFrameLoaderReady(frame, isRemote) {
+    if (!frame || !isRemote) return Promise.resolve();
+    return new Promise((resolve) => {
+      const onReady = () => resolve();
+      frame.addEventListener("XULFrameLoaderCreated", onReady, { once: true });
+    });
+  }
+
+  function configureExtensionBrowser(frame) {
+    if (!frame) return Promise.resolve();
+    frame.setAttribute("type", "content");
+    frame.setAttribute("disableglobalhistory", "true");
+    frame.setAttribute("messagemanagergroup", "webext-browsers");
+    frame.setAttribute("manualactiveness", "true");
+    frame.setAttribute("nodefaultsrc", "true");
+    frame.setAttribute("webextension-view-type", "sidebar");
+    frame.setAttribute("context", "");
+    frame.setAttribute("flex", "1");
+
+    const isRemote = !!extensionBrowserConfig.remote;
+    if (isRemote) {
+      frame.setAttribute("remote", "true");
+      if (extensionBrowserConfig.remoteType) {
+        frame.setAttribute("remoteType", String(extensionBrowserConfig.remoteType));
+      }
+      if (extensionBrowserConfig.browsingContextGroupId !== null && extensionBrowserConfig.browsingContextGroupId !== undefined) {
+        frame.setAttribute("initialBrowsingContextGroupId", String(extensionBrowserConfig.browsingContextGroupId));
+      }
+    }
+
+    return whenFrameLoaderReady(frame, isRemote);
+  }
+
   function clearLoadTimer(paneState) {
     if (!paneState || !paneState.loadTimer) return;
     try {
@@ -173,11 +211,20 @@
       return;
     }
     const token = nextLoadToken();
+    const src = buildPanelSrc(token);
     paneState.loadToken = token;
     paneState.contentReady = false;
     setPaneLoadState(paneState, "loading");
     clearLoadTimer(paneState);
-    paneState.frame.setAttribute("src", buildPanelSrc(token));
+    Promise.resolve(paneState.frameLoaderReadyPromise)
+      .then(() => {
+        if (paneState.loadToken !== token) return;
+        paneState.frame.setAttribute("src", src);
+      })
+      .catch((error) => {
+        if (paneState.loadToken !== token) return;
+        setPaneLoadState(paneState, "error", error && error.message ? error.message : "Frame loader setup failed");
+      });
     paneState.loadTimer = win.setTimeout(() => {
       if (paneState.loadToken !== token || paneState.loadState === "ready") return;
       setPaneLoadState(paneState, "error", "Panel ready signal timed out");
@@ -278,10 +325,7 @@
 
       frame = doc.createXULElement("browser");
       frame.setAttribute("id", UI.frameId);
-      frame.setAttribute("type", "content");
-      frame.setAttribute("disablehistory", "true");
-      frame.setAttribute("context", "");
-      frame.setAttribute("flex", "1");
+      const frameLoaderReadyPromise = configureExtensionBrowser(frame);
       frame.style.minWidth = `${UI.minWidth}px`;
       frame.style.width = "100%";
       frame.style.height = "100%";
@@ -338,6 +382,7 @@
         width: clampWidth(loadPrefInt(STORE.width, UI.defaultWidth)),
         visible: loadPrefBool(STORE.visible, true),
         dragging: false,
+        frameLoaderReadyPromise,
         loadToken: "",
         loadTimer: null,
         loadState: "loading",
@@ -429,6 +474,7 @@
       width: clampWidth(loadPrefInt(STORE.width, UI.defaultWidth)),
       visible: !host.hidden,
       dragging: false,
+      frameLoaderReadyPromise: Promise.resolve(),
       loadToken: "",
       loadTimer: null,
       loadState: "loading",
@@ -506,6 +552,11 @@
     getAPI(context) {
       ExtensionErrorClass = getExtensionErrorClass();
       extensionBase = context.extension.baseURI.spec;
+      extensionBrowserConfig = {
+        remote: !!context.extension.remote,
+        remoteType: context.extension.remoteType || "",
+        browsingContextGroupId: context.extension.browsingContextGroupId ?? null
+      };
       return {
         TbMailPane: {
           async show() {

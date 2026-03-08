@@ -7,6 +7,56 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.8 - 2026-03-08
+
+### 用户问题
+- 第四栏不再停在 `Loading Todo Sidebar...`，但仍然退化为 `Todo Sidebar failed to load.`
+- 点击 `Retry` 后依旧失败，错误控制台不再出现 `URL is not defined`
+- 控制台中剩余的主要输出只有 `calendarsRead/calendarsWrite` 权限 warning，需要区分其与当前装载失败是否存在直接因果关系
+
+### 讨论与决策摘要
+- `URL is not defined` 已经被修掉，因此当前故障点前移到了“扩展页承载 browser 是否具备正确的 WebExtension 宿主配置”
+- 对照 Mozilla/Thunderbird 自身的扩展页承载方式，当前 mailpane 宿主缺少 `messagemanagergroup=webext-browsers`、`manualactiveness`、`nodefaultsrc`、`webextension-view-type` 等关键属性
+- remote 扩展页在 frame loader 建立前就导航会产生不稳定行为，因此需要等待 `XULFrameLoaderCreated` 后再设置 `src`
+- 本次仍然只修这一条装载链根因，不混入权限 warning 的单独治理
+
+### 已做改动
+- 版本号升级到 `2.0.8`
+- `api/tbMailPane/implementation.js`
+  - 为 mailpane 宿主内的 `browser` 补齐 WebExtension 承载属性：`messagemanagergroup`、`manualactiveness`、`nodefaultsrc`、`webextension-view-type`
+  - 在可用时透传扩展运行时的 `remote`、`remoteType`、`browsingContextGroupId`
+  - 新增 frame loader 就绪等待逻辑；remote 模式下在 `XULFrameLoaderCreated` 之后再导航到 `sidebar/panel.html`
+  - `beginPanelLoad()` 改为先等 frame loader promise，再真正赋值 `src`
+- `tests/mailpane-extension-browser.test.mjs`
+  - 新增回归测试，覆盖 mailpane 扩展页宿主 `browser` 的关键属性与 frame loader 等待逻辑
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.8`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-extension-browser.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.8.xpi`
+
+### 验证结果
+- 回归测试通过：
+  - `node tests/mailpane-extension-browser.test.mjs`
+  - `node tests/mailpane-fallback.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.7 - 2026-03-08
 
 ### 用户问题
