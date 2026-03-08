@@ -131,6 +131,8 @@
       host.style.borderInlineStart = "1px solid color-mix(in srgb, currentColor 22%, transparent)";
       host.style.background = "var(--toolbar-bgcolor, #f3f4f6)";
       host.style.boxSizing = "border-box";
+      host.style.opacity = "1";
+      host.style.transition = "opacity 140ms ease";
 
       frame = doc.createXULElement("browser");
       frame.setAttribute("id", UI.frameId);
@@ -169,7 +171,9 @@
         onUnload: null,
         onMouseDown: null,
         onMouseMove: null,
-        onMouseUp: null
+        onMouseUp: null,
+        onMouseEnter: null,
+        onMouseLeave: null
       };
 
       paneState.onResize = () => applyPaneGeometry(win, paneState);
@@ -191,8 +195,16 @@
       paneState.onMouseUp = () => {
         paneState.dragging = false;
       };
+      paneState.onMouseEnter = () => {
+        host.style.opacity = "1";
+      };
+      paneState.onMouseLeave = () => {
+        host.style.opacity = "0.3";
+      };
 
       splitter.addEventListener("mousedown", paneState.onMouseDown, true);
+      host.addEventListener("mouseenter", paneState.onMouseEnter, true);
+      host.addEventListener("mouseleave", paneState.onMouseLeave, true);
       win.addEventListener("mousemove", paneState.onMouseMove, true);
       win.addEventListener("mouseup", paneState.onMouseUp, true);
       win.addEventListener("resize", paneState.onResize);
@@ -273,6 +285,12 @@
     try {
       if (paneState.splitter && paneState.onMouseDown) {
         paneState.splitter.removeEventListener("mousedown", paneState.onMouseDown, true);
+      }
+      if (paneState.host && paneState.onMouseEnter) {
+        paneState.host.removeEventListener("mouseenter", paneState.onMouseEnter, true);
+      }
+      if (paneState.host && paneState.onMouseLeave) {
+        paneState.host.removeEventListener("mouseleave", paneState.onMouseLeave, true);
       }
       if (paneState.onMouseMove) win.removeEventListener("mousemove", paneState.onMouseMove, true);
       if (paneState.onMouseUp) win.removeEventListener("mouseup", paneState.onMouseUp, true);
