@@ -2,7 +2,7 @@
 
 [中文](./README.md) | [English](./README.en.md)
 
-> A Thunderbird add-on that extracts actionable events from emails and imports confirmed items into calendar.
+> A Thunderbird add-on that extracts actionable events from emails and imports confirmed items into calendar. The main UI lives as a persistent right-side pane in Thunderbird mail view.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -65,21 +65,26 @@ Example current package:
 5. Restart Thunderbird (recommended).
 
 ### 3) Verify button visibility
-You should see a `Todo Sidebar` entry in toolbar or message-related entry points.
+You should see a `Todo Sidebar` entry in toolbar or message-related entry points. In Thunderbird mail view, the add-on UI appears as a persistent right-side pane / fourth column.
 
 If not visible:
 - Ensure the add-on is enabled.
 - Add the button via toolbar customization.
 - If shown as a menu-style action, open its dropdown and select the todo action.
 
+Right-side pane notes:
+- Toolbar actions show or focus the right-side pane instead of opening a temporary popup.
+- You can resize the pane by dragging its left splitter, and the add-on restores the last width.
+
 ## Quick Start (30s)
-1. Click `Scan Unread`.
-2. Select one or more mail accounts, then click `Start Scan`.
-3. Watch the bottom status line (e.g., `Status: uploaded x/y emails`).
-4. Click an item to open source email + expand details.
-5. Decide each item (`Confirm/Reject/Mark Read/Convert`).
-6. Click `Import Calendar`, choose calendar, confirm.
-7. Validate records in `Added to Calendar`.
+1. Open Thunderbird mail view and confirm the right-side pane is visible.
+2. Click `Scan Unread`.
+3. Select one or more mail accounts, then click `Start Scan`.
+4. Watch the bottom status line (e.g., `Status: uploaded x/y emails`).
+5. Click an item to open source email + expand details.
+6. Decide each item (`Confirm/Reject/Mark Read/Convert`).
+7. Click `Import Calendar`, choose calendar, confirm.
+8. Validate records in `Added to Calendar`.
 
 ## How to Use
 ### 1) Main panel layout

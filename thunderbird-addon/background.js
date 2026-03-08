@@ -3024,6 +3024,16 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
   throw err;
 }
 
+async function ensureDefaultMailPaneVisible() {
+  try {
+    if (browser.TbMailPane && typeof browser.TbMailPane.show === 'function') {
+      await browser.TbMailPane.show();
+    }
+  } catch (_) {
+    // Mail windows may not exist yet during startup.
+  }
+}
+
 browser.menus.onClicked.addListener(async (info, tab) => {
   if (!info) return;
   if (info.menuItemId === MENU_OPEN_FROM_ACTION) {
@@ -3064,9 +3074,11 @@ browser.menus.onClicked.addListener(async (info, tab) => {
 if (browser.runtime && browser.runtime.onInstalled) {
   browser.runtime.onInstalled.addListener(() => {
     setupContextMenus();
+    void ensureDefaultMailPaneVisible();
   });
 }
 setupContextMenus();
+void ensureDefaultMailPaneVisible();
 
 if (browser.browserAction && browser.browserAction.onClicked) {
   browser.browserAction.onClicked.addListener(async (tab) => {
