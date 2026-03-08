@@ -46,6 +46,15 @@ body {
   height: min(86vh, 760px);
 }
 
+body[data-layout="mailpane"] {
+  padding: 12px;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  min-height: 0;
+  height: 100vh;
+}
+
 .app-shell {
   height: 100%;
   min-height: 0;

@@ -1,5 +1,9 @@
 'use strict';
 
+const layoutParams = new URLSearchParams(window.location.search);
+const layoutMode = layoutParams.get('layout') === 'mailpane' ? 'mailpane' : 'popup';
+document.body.dataset.layout = layoutMode;
+
 const el = {
   scanBtn: document.getElementById('scanBtn'),
   refreshBtn: document.getElementById('refreshBtn'),
