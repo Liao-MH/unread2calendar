@@ -46,15 +46,27 @@
         ],
         "script": "api/tbCalendarAccess/implementation.js"
       }
+    },
+    "TbMailPane": {
+      "schema": "api/tbMailPane/schema.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "paths": [
+          [
+            "TbMailPane"
+          ]
+        ],
+        "script": "api/tbMailPane/implementation.js"
+      }
     }
   },
   "browser_action": {
-    "default_title": "Todo Sidebar",
-    "default_popup": "sidebar/panel.html"
+    "default_title": "Todo Sidebar"
   },
   "message_display_action": {
-    "default_title": "Todo Sidebar",
-    "default_popup": "sidebar/panel.html"
+    "default_title": "Todo Sidebar"
   },
   "options_ui": {
     "page": "options/options.html",

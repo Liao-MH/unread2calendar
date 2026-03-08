@@ -2995,6 +2995,21 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
   const windowId = tab && Number.isInteger(tab.windowId) ? tab.windowId : undefined;
 
   try {
+    if (browser.TbMailPane) {
+      if (toggle && typeof browser.TbMailPane.toggle === 'function') {
+        await browser.TbMailPane.toggle();
+        return;
+      }
+      if (typeof browser.TbMailPane.show === 'function') {
+        await browser.TbMailPane.show();
+        return;
+      }
+    }
+  } catch (error) {
+    errors.push(`TbMailPane: ${formatErrorDetail(error)}`);
+  }
+
+  try {
     if (browser.browserAction && typeof browser.browserAction.openPopup === 'function') {
       await browser.browserAction.openPopup();
       return;
