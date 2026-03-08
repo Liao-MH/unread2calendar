@@ -318,7 +318,6 @@
       host.style.minHeight = "0";
       host.style.height = "100%";
       host.style.opacity = "1";
-      host.style.transition = "opacity 140ms ease";
       host.hidden = true;
 
       stack = doc.createXULElement("stack");
@@ -399,8 +398,6 @@
         onMouseDown: null,
         onMouseMove: null,
         onMouseUp: null,
-        onMouseEnter: null,
-        onMouseLeave: null,
         onRetry: null
       };
 
@@ -426,19 +423,11 @@
       paneState.onMouseUp = () => {
         paneState.dragging = false;
       };
-      paneState.onMouseEnter = () => {
-        host.style.opacity = "1";
-      };
-      paneState.onMouseLeave = () => {
-        host.style.opacity = "0.3";
-      };
       paneState.onRetry = () => {
         beginPanelLoad(win, paneState, { force: true });
       };
 
       splitter.addEventListener("mousedown", paneState.onMouseDown, true);
-      host.addEventListener("mouseenter", paneState.onMouseEnter, true);
-      host.addEventListener("mouseleave", paneState.onMouseLeave, true);
       retryButton.addEventListener("command", paneState.onRetry, true);
       win.addEventListener("mousemove", paneState.onMouseMove, true);
       win.addEventListener("mouseup", paneState.onMouseUp, true);
@@ -526,12 +515,6 @@
     try {
       if (paneState.splitter && paneState.onMouseDown) {
         paneState.splitter.removeEventListener("mousedown", paneState.onMouseDown, true);
-      }
-      if (paneState.host && paneState.onMouseEnter) {
-        paneState.host.removeEventListener("mouseenter", paneState.onMouseEnter, true);
-      }
-      if (paneState.host && paneState.onMouseLeave) {
-        paneState.host.removeEventListener("mouseleave", paneState.onMouseLeave, true);
       }
       if (paneState.retryButton && paneState.onRetry) {
         paneState.retryButton.removeEventListener("command", paneState.onRetry, true);

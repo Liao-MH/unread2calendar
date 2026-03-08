@@ -55,6 +55,51 @@ body[data-layout="mailpane"] {
   height: 100vh;
 }
 
+body[data-layout="mailpane"] .top-fixed {
+  min-height: 0;
+}
+
+body[data-layout="mailpane"] .topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+body[data-layout="mailpane"] .taskbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+body[data-layout="mailpane"] .topbar > button,
+body[data-layout="mailpane"] .taskbar > button {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+body[data-layout="mailpane"] .topbar > .primary {
+  flex-basis: 152px;
+}
+
+body[data-layout="mailpane"] .groups {
+  min-height: 0;
+}
+
+body[data-layout="mailpane"] .footer {
+  min-height: 0;
+  position: static;
+}
+
+body[data-layout="mailpane"] .status-box {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+body[data-layout="mailpane"] .version-line {
+  text-align: left;
+}
+
 .app-shell {
   height: 100%;
   min-height: 0;
@@ -394,4 +439,23 @@ button:disabled {
   font-size: var(--e2c-status-size);
   color: var(--e2c-status-color);
   text-align: right;
+}
+
+@media (max-height: 760px) {
+  body[data-layout="mailpane"] {
+    padding: 10px;
+  }
+
+  body[data-layout="mailpane"] .top-fixed,
+  body[data-layout="mailpane"] .footer {
+    gap: 6px;
+  }
+
+  body[data-layout="mailpane"] button,
+  body[data-layout="mailpane"] .hint,
+  body[data-layout="mailpane"] .context-box,
+  body[data-layout="mailpane"] .status-box {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
 }

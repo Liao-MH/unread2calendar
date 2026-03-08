@@ -7,6 +7,65 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.10 - 2026-03-08
+
+### 用户问题
+- 第四栏已经作为真实列显示，但面板内部按钮和模块不会随着分栏宽度、窗口高度自动伸缩
+- 顶部按钮区、任务区和底部信息区仍然保留 popup 风格的固定布局
+- 不再需要鼠标移出后降低不透明度，第四栏应始终正常显示
+
+### 讨论与决策摘要
+- 当前问题已经从宿主层转到面板层：`panel.css` 仍按 popup 固定列数布局书写，不适合 mailpane 列宽动态变化
+- 选定策略是保留 popup 的功能结构和按钮顺序，只在 `data-layout="mailpane"` 下启用响应式规则
+- 顶部按钮区和任务区按自动换行处理，`groups` 继续作为主要滚动区，footer 在窄宽和矮高下自然堆叠
+- 透明度行为直接移除，不再保留宿主 dimming 逻辑或相关监听
+
+### 已做改动
+- 版本号升级到 `2.0.10`
+- `sidebar/panel.css`
+  - 为 `mailpane` 模式新增响应式规则：顶部按钮区和任务区改为可换行布局
+  - mailpane 下按钮允许按容器宽度自动折行，不改变顺序
+  - `groups` 区在 mailpane 下明确保持 `min-height: 0`，继续承担主要滚动
+  - `footer` 在 mailpane 下去掉 sticky 依赖，改为更稳定的嵌入式底部区
+  - `status-box` 在 mailpane 下允许换行，避免窄栏中被截断
+  - 为较矮窗口追加轻量间距压缩规则
+- `api/tbMailPane/implementation.js`
+  - 移除宿主 `mouseenter` / `mouseleave` 不透明度监听
+  - 保留宿主始终 `opacity = 1`
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 mailpane 响应式换行、scroll 区和 footer 嵌入规则的断言
+- `tests/mailpane-dimming.test.mjs`
+  - 改为校验宿主永久不透明，不再允许 `0.3` 透明度或相关鼠标监听
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.10`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.css`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-layout.test.mjs`
+- `tests/mailpane-dimming.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.10.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-dimming.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.9 - 2026-03-08
 
 ### 用户问题
