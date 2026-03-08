@@ -55,7 +55,16 @@ body[data-layout="mailpane"] {
   height: 100vh;
 }
 
+body[data-layout="mailpane"] .app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 body[data-layout="mailpane"] .top-fixed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   min-height: 0;
 }
 
@@ -63,31 +72,61 @@ body[data-layout="mailpane"] .topbar {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
+  align-content: flex-start;
+  gap: 8px;
 }
 
 body[data-layout="mailpane"] .taskbar {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
+  align-content: flex-start;
+  gap: 8px;
 }
 
 body[data-layout="mailpane"] .topbar > button,
 body[data-layout="mailpane"] .taskbar > button {
-  flex: 1 1 120px;
+  flex: 1 1 8.75rem;
   min-width: 0;
+  max-width: 100%;
 }
 
 body[data-layout="mailpane"] .topbar > .primary {
-  flex-basis: 152px;
+  flex-basis: 10.5rem;
+}
+
+body[data-layout="mailpane"] .context-box,
+body[data-layout="mailpane"] .hint,
+body[data-layout="mailpane"] .status-box {
+  overflow-wrap: anywhere;
 }
 
 body[data-layout="mailpane"] .groups {
+  flex: 1 1 auto;
   min-height: 0;
+  align-content: start;
+  grid-auto-rows: max-content;
 }
 
 body[data-layout="mailpane"] .footer {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  gap: 8px;
   min-height: 0;
   position: static;
+}
+
+body[data-layout="mailpane"] .importBtn,
+body[data-layout="mailpane"] #importBtn {
+  width: 100%;
+}
+
+body[data-layout="mailpane"] .imported-host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 body[data-layout="mailpane"] .status-box {
@@ -98,6 +137,30 @@ body[data-layout="mailpane"] .status-box {
 
 body[data-layout="mailpane"] .version-line {
   text-align: left;
+}
+
+body[data-layout="mailpane"] .group,
+body[data-layout="mailpane"] .item,
+body[data-layout="mailpane"] .group-header,
+body[data-layout="mailpane"] .group-head-left {
+  min-width: 0;
+}
+
+body[data-layout="mailpane"] .group-header,
+body[data-layout="mailpane"] .group-head-left {
+  flex-wrap: wrap;
+}
+
+body[data-layout="mailpane"] .group-toggle {
+  align-self: flex-start;
+}
+
+body[data-layout="mailpane"] .item-title,
+body[data-layout="mailpane"] .item-time,
+body[data-layout="mailpane"] .item-location,
+body[data-layout="mailpane"] .version-line,
+body[data-layout="mailpane"] .groups-empty {
+  overflow-wrap: anywhere;
 }
 
 .app-shell {

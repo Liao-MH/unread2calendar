@@ -7,6 +7,60 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.11 - 2026-03-08
+
+### 用户问题
+- 第四栏已经作为真实右侧列显示，但插件内按钮和模块仍然像 popup 一样固定在原位置
+- 分栏宽度和窗口高度变化时，布局只是被压缩，没有真正按侧栏重新排布
+- 当前 mailpane 需要真正的流式侧栏布局，而不是继续在 popup 样式上叠加少量换行规则
+
+### 讨论与决策摘要
+- 根因仍在 `panel.css`：此前只给 mailpane 增加了局部换行，`app-shell`、`top-fixed`、`footer` 仍沿用 popup 的 grid/sticky 关系
+- 选定策略是把 mailpane 定义为流式侧栏布局：顶部控制区自然流动，中间 `groups` 区吃掉剩余高度，底部信息区改为可堆叠尾部
+- 不再改 `TbMailPane` 宿主层，改动边界收敛在 `sidebar/panel.css` 和布局测试
+- 功能范围、按钮顺序、模块顺序保持与 popup 一致，只改变 mailpane 下的响应式排布行为
+
+### 已做改动
+- 版本号升级到 `2.0.11`
+- `sidebar/panel.css`
+  - mailpane 下把 `.app-shell` 改为真正的纵向 `flex` 侧栏骨架
+  - mailpane 下把 `.top-fixed` 改为流式纵向控制区，不再沿用 popup 固定块关系
+  - 顶部按钮区和任务区继续保持原顺序，但按钮采用更流式的 `flex` 尺寸规则
+  - `groups` 区改为明确吃掉剩余高度，并保持主滚动区职责
+  - `footer` 改为纵向堆叠信息区，摆脱 popup 风格的 sticky 尾部假设
+  - 为分组头、条目标题、状态文本等补充 `min-width: 0` 和换行规则，避免窄栏里只压缩不重排
+- `tests/mailpane-layout.test.mjs`
+  - 先新增失败断言，要求 mailpane 必须具备流式侧栏骨架
+  - 再验证 `.app-shell`、`.top-fixed`、`.groups`、`.footer` 的 mailpane 专属 `flex` 关系
+  - 补充校验 mailpane 控件使用流式 `flex` 尺寸，而不是 popup 时代的固定单元格
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.11`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.11.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-dimming.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.10 - 2026-03-08
 
 ### 用户问题
