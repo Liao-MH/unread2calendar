@@ -7,6 +7,57 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.9 - 2026-03-08
+
+### 用户问题
+- 第四栏功能已经显示，但仍然覆盖在邮件正文上，而不是作为真实右侧栏并排布局
+- 面板宽度变化没有驱动主邮件工作区重排
+- 在附加组件管理器、设置页等非主邮件 tab 中也会继续显示第四栏
+
+### 讨论与决策摘要
+- 这三个现象来自同一个结构性根因：Todo 面板宿主仍作为 `position: fixed` 覆盖层挂在窗口根上，而不是 `tabmail` 布局树中的真实列
+- Thunderbird 主窗口的 `tabmail-container` 是更合适的宿主插入点，能让第四栏参与真实横向布局
+- 第四栏显示范围应当由当前 tab 类型控制，而不是仅由 `mail:3pane` 窗口类型控制
+- 选定策略是只在 `mail3PaneTab` 显示，并在其他 tab 中按规则隐藏，而不是报错或销毁状态
+
+### 已做改动
+- 版本号升级到 `2.0.9`
+- `api/tbMailPane/implementation.js`
+  - 新增 `getTabmail()`、`getPaneContainer()`、`isMailThreePaneTabActive()`、`shouldShowPaneInWindow()`，将显示策略绑定到当前 `tabmail` 选中 tab
+  - 宿主插入点从窗口根改为 `tabmail-container`
+  - 移除 host / splitter 的 `position: fixed` 覆盖层定位，改为真实布局子列
+  - 拖拽宽度改为基于宿主容器右边界计算，从而驱动主工作区重排
+  - 新增 `TabSelect` 监听和 tab 容器观察，切换到非 `mail3PaneTab` 时自动隐藏第四栏
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 新增回归测试，覆盖真实列插入点、非 fixed 布局以及 `mail3PaneTab` 可见性范围
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.9`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.9.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-extension-browser.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.8 - 2026-03-08
 
 ### 用户问题

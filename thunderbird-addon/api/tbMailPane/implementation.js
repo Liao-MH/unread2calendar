@@ -115,6 +115,16 @@
     return (win && win.document) ? win : null;
   }
 
+  function getTabmail(win) {
+    if (!win || !win.document) return null;
+    return win.document.getElementById("tabmail");
+  }
+
+  function getPaneContainer(doc) {
+    if (!doc) return null;
+    return doc.getElementById("tabmail-container");
+  }
+
   function buildPanelSrc(token) {
     const base = `${extensionBase}sidebar/panel.html`;
     const query = `layout=mailpane&mailpaneToken=${encodeURIComponent(String(token || ""))}`;
@@ -269,26 +279,15 @@
     return isPaneActuallyVisible(win, paneState);
   }
 
-  function todayPaneOffsetRight(doc) {
-    try {
-      const today = doc.getElementById("today-pane-panel");
-      if (!today || today.hidden || today.collapsed) return 0;
-      const rect = today.getBoundingClientRect();
-      const splitter = doc.getElementById("today-splitter");
-      const splitRect = splitter && !splitter.hidden ? splitter.getBoundingClientRect() : null;
-      const width = Math.max(0, Math.round(rect.width || 0));
-      const splitWidth = splitRect ? Math.max(0, Math.round(splitRect.width || 0)) : 0;
-      return width + splitWidth;
-    } catch (_) {
-      return 0;
-    }
+  function isMailThreePaneTabActive(win) {
+    const tabmail = getTabmail(win);
+    const currentTabInfo = tabmail && tabmail.currentTabInfo;
+    const modeName = currentTabInfo && currentTabInfo.mode && currentTabInfo.mode.name;
+    return modeName === "mail3PaneTab";
   }
 
-  function topOffset(doc) {
-    const nav = doc.getElementById("navigation-toolbox") || doc.getElementById("mail-toolbox");
-    if (!nav || typeof nav.getBoundingClientRect !== "function") return 0;
-    const rect = nav.getBoundingClientRect();
-    return Math.max(0, Math.round(rect.bottom || 0));
+  function shouldShowPaneInWindow(win, paneState) {
+    return !!(paneState && paneState.visible && isMailThreePaneTabActive(win));
   }
 
   function ensurePaneForWindow(win) {
@@ -303,16 +302,21 @@
     let retryButton = doc.getElementById(UI.retryButtonId);
 
     if (!host) {
+      const paneContainer = getPaneContainer(doc);
+      if (!paneContainer) return null;
       host = doc.createXULElement("vbox");
       host.setAttribute("id", UI.hostId);
       host.setAttribute("orient", "vertical");
-      host.style.position = "fixed";
-      host.style.bottom = "0";
-      host.style.zIndex = "2147483000";
+      host.setAttribute("flex", "0");
       host.style.borderInlineStart = "1px solid color-mix(in srgb, currentColor 22%, transparent)";
       host.style.background = "var(--toolbar-bgcolor, #f3f4f6)";
       host.style.boxSizing = "border-box";
       host.style.overflow = "hidden";
+      host.style.minWidth = `${UI.minWidth}px`;
+      host.style.maxWidth = `${UI.maxWidth}px`;
+      host.style.width = `${UI.defaultWidth}px`;
+      host.style.minHeight = "0";
+      host.style.height = "100%";
       host.style.opacity = "1";
       host.style.transition = "opacity 140ms ease";
       host.hidden = true;
@@ -360,18 +364,18 @@
 
       splitter = doc.createXULElement("vbox");
       splitter.setAttribute("id", UI.splitterId);
-      splitter.style.position = "fixed";
-      splitter.style.bottom = "0";
+      splitter.setAttribute("flex", "0");
       splitter.style.width = "6px";
+      splitter.style.minWidth = "6px";
       splitter.style.cursor = "ew-resize";
-      splitter.style.zIndex = "2147483001";
       splitter.style.background = "transparent";
       splitter.hidden = true;
 
-      doc.documentElement.appendChild(splitter);
-      doc.documentElement.appendChild(host);
+      paneContainer.appendChild(splitter);
+      paneContainer.appendChild(host);
 
       const paneState = {
+        container: paneContainer,
         host,
         stack,
         splitter,
@@ -391,6 +395,7 @@
         observer: null,
         onResize: null,
         onUnload: null,
+        onTabSelect: null,
         onMouseDown: null,
         onMouseMove: null,
         onMouseUp: null,
@@ -401,6 +406,7 @@
 
       paneState.onResize = () => applyPaneGeometry(win, paneState);
       paneState.onUnload = () => cleanupWindow(win);
+      paneState.onTabSelect = () => applyPaneGeometry(win, paneState);
       paneState.onMouseDown = (event) => {
         if (event.button !== 0) return;
         paneState.dragging = true;
@@ -408,9 +414,11 @@
       };
       paneState.onMouseMove = (event) => {
         if (!paneState.dragging) return;
-        const viewportWidth = Math.max(0, Math.round(win.innerWidth || 0));
-        const offset = todayPaneOffsetRight(doc);
-        const next = clampWidth(viewportWidth - Math.round(event.clientX || 0) - offset);
+        const rect = paneState.container && typeof paneState.container.getBoundingClientRect === "function"
+          ? paneState.container.getBoundingClientRect()
+          : null;
+        const right = rect ? Math.round(rect.right || 0) : Math.round(win.innerWidth || 0);
+        const next = clampWidth(right - Math.round(event.clientX || 0));
         paneState.width = next;
         savePrefInt(STORE.width, next);
         applyPaneGeometry(win, paneState);
@@ -436,21 +444,18 @@
       win.addEventListener("mouseup", paneState.onMouseUp, true);
       win.addEventListener("resize", paneState.onResize);
       win.addEventListener("unload", paneState.onUnload, { once: true });
+      const tabmail = getTabmail(win);
+      if (tabmail && tabmail.tabContainer) {
+        tabmail.tabContainer.addEventListener("TabSelect", paneState.onTabSelect, true);
+      }
       try {
-        const todayPane = doc.getElementById("today-pane-panel");
         paneState.observer = new win.MutationObserver(() => applyPaneGeometry(win, paneState));
-        paneState.observer.observe(doc.documentElement, {
-          attributes: true,
-          childList: false,
-          subtree: true,
-          attributeFilter: ["hidden", "collapsed", "style", "class"]
-        });
-        if (todayPane) {
-          paneState.observer.observe(todayPane, {
+        if (tabmail && tabmail.tabContainer) {
+          paneState.observer.observe(tabmail.tabContainer, {
             attributes: true,
-            childList: false,
-            subtree: false,
-            attributeFilter: ["hidden", "collapsed", "style", "class"]
+            childList: true,
+            subtree: true,
+            attributeFilter: ["selected", "collapsed", "hidden", "style", "class"]
           });
         }
       } catch (_) {
@@ -464,6 +469,7 @@
     }
 
     const existing = paneByWindow.get(win) || {
+      container: getPaneContainer(doc),
       host,
       stack,
       splitter,
@@ -489,22 +495,15 @@
 
   function applyPaneGeometry(win, paneState) {
     if (!paneState || !paneState.host || !paneState.splitter) return;
-    const doc = win.document;
-    const top = topOffset(doc);
-    const right = todayPaneOffsetRight(doc);
     const width = clampWidth(paneState.width);
     paneState.width = width;
-
-    paneState.host.style.top = `${top}px`;
-    paneState.host.style.right = `${right}px`;
     paneState.host.style.width = `${width}px`;
-    paneState.host.style.height = `calc(100vh - ${top}px)`;
+    paneState.host.style.minWidth = `${UI.minWidth}px`;
+    paneState.host.style.maxWidth = `${UI.maxWidth}px`;
+    paneState.host.style.height = "100%";
+    paneState.splitter.style.height = "100%";
 
-    paneState.splitter.style.top = `${top}px`;
-    paneState.splitter.style.right = `${right + width}px`;
-    paneState.splitter.style.height = `calc(100vh - ${top}px)`;
-
-    const visible = paneState.visible;
+    const visible = shouldShowPaneInWindow(win, paneState);
     paneState.host.hidden = !visible;
     paneState.splitter.hidden = !visible;
   }
@@ -540,6 +539,10 @@
       if (paneState.onMouseMove) win.removeEventListener("mousemove", paneState.onMouseMove, true);
       if (paneState.onMouseUp) win.removeEventListener("mouseup", paneState.onMouseUp, true);
       if (paneState.onResize) win.removeEventListener("resize", paneState.onResize);
+      const tabmail = getTabmail(win);
+      if (tabmail && tabmail.tabContainer && paneState.onTabSelect) {
+        tabmail.tabContainer.removeEventListener("TabSelect", paneState.onTabSelect, true);
+      }
       if (paneState.observer) paneState.observer.disconnect();
       clearLoadTimer(paneState);
     } catch (_) {
