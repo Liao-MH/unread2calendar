@@ -47,52 +47,45 @@ body {
 }
 
 body[data-layout="mailpane"] {
-  padding: 12px;
+  padding: clamp(8px, 1.6vh, 12px);
   width: 100%;
   min-width: 0;
   max-width: none;
   min-height: 0;
-  height: 100vh;
+  height: 100%;
 }
 
 body[data-layout="mailpane"] .app-shell {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(8px, 1.6vh, 12px);
+  min-height: 100%;
 }
 
 body[data-layout="mailpane"] .top-fixed {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: clamp(6px, 1.2vh, 10px);
   min-height: 0;
 }
 
 body[data-layout="mailpane"] .topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  align-content: flex-start;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr));
+  gap: clamp(6px, 1.2vh, 8px);
 }
 
 body[data-layout="mailpane"] .taskbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  align-content: flex-start;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
+  gap: clamp(6px, 1.2vh, 8px);
 }
 
 body[data-layout="mailpane"] .topbar > button,
 body[data-layout="mailpane"] .taskbar > button {
-  flex: 1 1 8.75rem;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
-}
-
-body[data-layout="mailpane"] .topbar > .primary {
-  flex-basis: 10.5rem;
 }
 
 body[data-layout="mailpane"] .context-box,
@@ -102,17 +95,16 @@ body[data-layout="mailpane"] .status-box {
 }
 
 body[data-layout="mailpane"] .groups {
-  flex: 1 1 auto;
   min-height: 0;
   align-content: start;
   grid-auto-rows: max-content;
+  overflow: auto;
 }
 
 body[data-layout="mailpane"] .footer {
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 auto;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(6px, 1.2vh, 8px);
   min-height: 0;
   position: static;
 }
@@ -151,8 +143,21 @@ body[data-layout="mailpane"] .group-head-left {
   flex-wrap: wrap;
 }
 
+body[data-layout="mailpane"] .group-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+body[data-layout="mailpane"] .group-head-left {
+  display: flex;
+  align-items: baseline;
+}
+
 body[data-layout="mailpane"] .group-toggle {
+  min-width: 0;
   align-self: flex-start;
+  justify-self: end;
 }
 
 body[data-layout="mailpane"] .item-title,

@@ -125,31 +125,6 @@
     return doc.getElementById("tabmail-container");
   }
 
-  function getPaneInsertionPoint(doc) {
-    if (!doc) return null;
-    const tabmailContainer = doc.getElementById("tabmail-container");
-    if (!tabmailContainer) return null;
-    const todayPane = doc.getElementById("today-pane-panel");
-    const todaySplitter = doc.getElementById("today-splitter");
-    const tabmailRow = tabmailContainer.parentNode;
-    if (todayPane && todayPane.parentNode && tabmailRow && todayPane.parentNode === tabmailRow) {
-      return {
-        container: tabmailRow,
-        tabmailContainer,
-        todayPane,
-        todaySplitter,
-        anchor: todaySplitter || todayPane || null
-      };
-    }
-    return {
-      container: tabmailRow || tabmailContainer,
-      tabmailContainer,
-      todayPane,
-      todaySplitter,
-      anchor: null
-    };
-  }
-
   function buildPanelSrc(token) {
     const base = `${extensionBase}sidebar/panel.html`;
     const query = `layout=mailpane&mailpaneToken=${encodeURIComponent(String(token || ""))}`;
@@ -327,9 +302,7 @@
     let retryButton = doc.getElementById(UI.retryButtonId);
 
     if (!host) {
-      const insertionPoint = getPaneInsertionPoint(doc);
-      const paneContainer = insertionPoint && insertionPoint.container;
-      const insertionAnchor = insertionPoint ? insertionPoint.anchor : null;
+      const paneContainer = getPaneContainer(doc);
       if (!paneContainer) return null;
       host = doc.createXULElement("vbox");
       host.setAttribute("id", UI.hostId);
@@ -343,7 +316,7 @@
       host.style.maxWidth = `${UI.maxWidth}px`;
       host.style.width = `${UI.defaultWidth}px`;
       host.style.minHeight = "0";
-      host.style.alignSelf = "stretch";
+      host.style.height = "100%";
       host.style.opacity = "1";
       host.hidden = true;
 
@@ -395,11 +368,10 @@
       splitter.style.minWidth = "6px";
       splitter.style.cursor = "ew-resize";
       splitter.style.background = "transparent";
-      splitter.style.alignSelf = "stretch";
       splitter.hidden = true;
 
-      paneContainer.insertBefore(splitter, insertionAnchor);
-      paneContainer.insertBefore(host, insertionAnchor);
+      paneContainer.appendChild(splitter);
+      paneContainer.appendChild(host);
 
       const paneState = {
         container: paneContainer,
@@ -517,6 +489,8 @@
     paneState.host.style.width = `${width}px`;
     paneState.host.style.minWidth = `${UI.minWidth}px`;
     paneState.host.style.maxWidth = `${UI.maxWidth}px`;
+    paneState.host.style.height = "100%";
+    paneState.splitter.style.height = "100%";
 
     const visible = shouldShowPaneInWindow(win, paneState);
     paneState.host.hidden = !visible;

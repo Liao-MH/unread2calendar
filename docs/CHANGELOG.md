@@ -7,6 +7,69 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.14 - 2026-03-08
+
+### 用户问题
+- 用户要求先回退到 `2.0.11`，再重新解决 mailpane 内部布局不会随分栏宽高真实变化的问题
+- `2.0.12` / `2.0.13` 的宿主层试验已经带来连续回归，不应继续作为后续布局修复的基线
+
+### 讨论与决策摘要
+- 根因拆分为两层：
+  - `2.0.12` / `2.0.13` 的可见性回归来自 `TbMailPane` 宿主层对 `today-pane` 共享行与插入顺序的试探
+  - “布局不改变”仍然是 `panel.css` 的问题，属于内嵌侧栏的内容布局，不属于 Thunderbird 宿主几何
+- 决策是严格回退宿主层到 `2.0.11` 基线，再只在 `panel` 层重新做 mailpane 布局
+- 布局修复目标收敛为流式侧栏：控制区 `auto-fit` 重排，中间区主滚动，footer 纵向堆叠
+
+### 已做改动
+- 版本号升级到 `2.0.14`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+  - 功能性恢复到 `2.0.11` 宿主基线
+  - 移除 `today-pane-panel` / `today-splitter` 相关共享行插入逻辑
+  - 恢复直接挂载到 `tabmail-container` 的稳定实现
+- `thunderbird-addon/sidebar/panel.css`
+  - `mailpane` 模式 body 改为 `height: 100%`，不再强绑视口高度
+  - `.app-shell` 改为 `auto / minmax(0, 1fr) / auto` 的嵌入式 grid 外壳
+  - `.topbar` / `.taskbar` 改为 `repeat(auto-fit, minmax(min(...), 1fr))` 的流式 grid
+  - mailpane 下按钮占满各自网格单元，随宽度真实换行重排
+  - `.groups` 明确承担主滚动并保持 `min-height: 0`
+  - `.footer` 改为单列 stacked grid
+  - `.group-header` 改为 `minmax(0, 1fr) auto` 布局，避免窄栏下标题和按钮互相挤压
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 改为校验 `2.0.11` 宿主基线，不再接受 `today-pane` DOM 依赖
+- `tests/mailpane-layout.test.mjs`
+  - 改为校验更强的流式布局目标：嵌入式 grid shell、`auto-fit` 控制区、stacked footer、流式 group header
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.14`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `fix: restore mailpane host baseline and reflow layout`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.14.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.13 - 2026-03-08
 
 ### 用户问题
