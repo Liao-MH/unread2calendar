@@ -7,6 +7,77 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.3 - 2026-03-08
+
+### 用户问题
+- 不应覆盖 `v2.0.2` 的 XPI 产物。
+- 插件主界面需要从 popup 迁移为 Thunderbird 邮件页右侧第四栏。
+- 第四栏移出鼠标后降到 30% 透明度。
+- LLM 测试连接超时需要缩短到 5 秒。
+
+### 讨论与决策摘要
+- 采用现有 `TbMailPane` experiment 作为第四栏宿主，而不是继续以 popup 作为主入口。
+- 版本号升级到 `2.0.3`，避免覆盖 `v2.0.2` 产物。
+- README 改为描述 mailpane-first 交互，并同步当前包名与版本号。
+
+### 已做改动
+- 版本号升级到 `2.0.3`。
+- `manifest.json`
+  - 注册 `TbMailPane` experiment。
+  - 移除 `browser_action` / `message_display_action` 的 `default_popup`。
+- `background.js`
+  - 主界面打开逻辑改为优先调用 `TbMailPane.show()` / `toggle()`。
+  - 启动时默认请求显示第四栏。
+  - 保留 `tabs.create(...)` 作为回退入口。
+- `api/tbMailPane/implementation.js`
+  - 启用常驻右侧第四栏宿主。
+  - 支持拖拽分隔条调整宽度并持久化。
+  - 新增鼠标移出宿主后降到 `0.3` 透明度，移回恢复 `1.0`。
+- `sidebar/panel.js` / `sidebar/panel.css`
+  - 新增 `layout=mailpane` 布局模式。
+  - 在第四栏宿主内移除 popup 的最小宽高限制，按嵌入式面板铺满高度。
+- `options/options.js`
+  - 连接测试超时由 `8000ms` 调整为 `5000ms`。
+- `README.md` / `README.en.md`
+  - 更新为第四栏常驻交互说明。
+  - 当前包示例和文档版本更新为 `v2.0.3`。
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `thunderbird-addon/options/options.js`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+- `tests/mailpane-mode.test.mjs`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/mailpane-dimming.test.mjs`
+- `tests/mailpane-default-visible.test.mjs`
+- `tests/readme-mailpane-mode.test.mjs`
+- `tests/release-version.test.mjs`
+- `tests/options-provider-presets.test.mjs`
+
+### Commit 列表
+- `8ebb78f` test: switch manifest coverage to mailpane mode
+- `afce7f2` feat: open todo ui through mail pane host
+- `a6e2897` feat: support embedded mailpane panel layout
+- `786c4ba` feat: dim mail pane host on pointer leave
+- `007cab4` feat: shorten llm connection timeout
+- `570c93d` docs: describe mailpane-first thunderbird ui
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.3.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.2 - 2026-02-27
 
 ### 用户问题
