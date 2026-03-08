@@ -7,6 +7,68 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.6 - 2026-03-08
+
+### 用户问题
+- 第四栏虽然已经出现，但其中完全空白，没有呈现 popup 原本的功能本体。
+- 需求不是做新的控制面板，而是把 popup 中已有的完整交互功能放进第四栏。
+- 如果第四栏内容加载失败，不能继续保持空白。
+
+### 讨论与决策摘要
+- 第四栏继续作为唯一主入口，但只作为宿主层，不重写业务面板。
+- popup 的 `panel.html/panel.js` 继续作为唯一功能本体，尽量保持原有结构和交互顺序。
+- 只允许做最少的 mailpane 布局适配，不扩展业务范围。
+- 内容装载失败时，第四栏内部显示内嵌 fallback，而不是纯空白或只弹外部告警。
+
+### 已做改动
+- 版本号升级到 `2.0.6`。
+- `api/tbMailPane/schema.json`
+  - 新增 `markPanelReady(token)` 和 `markPanelLoadFailed(token, reason)`，用于宿主和嵌入面板之间的 ready/failure 握手。
+- `api/tbMailPane/implementation.js`
+  - 为第四栏宿主新增 `loading / ready / error` 三态。
+  - 新增内嵌 overlay、提示文案和重试按钮，避免出现空白第四栏。
+  - 以 `mailpaneToken` 追踪每次嵌入面板加载，并等待面板 ready 信号或超时进入 error。
+  - `getState()` 现在返回 `contentReady` 与 `loadState`，供打开流程判断“功能本体是否真的呈现”。
+  - 为嵌入 `browser` 明确补足 `height: 100%`，减小宿主显示但内容区不渲染的风险。
+- `sidebar/panel.js`
+  - 读取 `mailpaneToken`。
+  - 在 mailpane 模式下，当主面板壳体初始化完成后主动上报 ready。
+  - 如果脚本在 ready 前发生致命错误，则主动上报 load failure。
+- `sidebar/panel.css`
+  - mailpane 模式下明确使用 `width: 100%`，让 popup 功能页完整铺满第四栏宿主。
+- `background.js`
+  - 打开逻辑现在要求第四栏至少达到“内容 ready”或“宿主内 error fallback”之一，不再把“空白但可见”视为成功。
+- 测试
+  - 新增 `tests/mailpane-fallback.test.mjs`
+  - 更新 mailpane open flow / layout 测试，覆盖 ready token、宿主 fallback 和 content readiness 判定
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/mailpane-fallback.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.6.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.5 - 2026-03-08
 
 ### 用户问题

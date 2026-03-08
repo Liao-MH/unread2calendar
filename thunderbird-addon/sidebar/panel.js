@@ -2,6 +2,7 @@
 
 const layoutParams = new URLSearchParams(window.location.search);
 const layoutMode = layoutParams.get('layout') === 'mailpane' ? 'mailpane' : 'popup';
+const mailPaneToken = layoutParams.get('mailpaneToken');
 document.body.dataset.layout = layoutMode;
 
 const el = {
@@ -146,6 +147,8 @@ const I18N = {
 };
 
 let vm = null;
+let mailPaneReadySent = false;
+let mailPaneFailureSent = false;
 const PANEL_UI_STATE_KEY = 'todo.panel-ui-state.v1';
 const PANEL_WINDOW_STATE_KEY = 'todo.panel-window-state.v1';
 const PANEL_MIN_WIDTH = 560;
@@ -443,6 +446,28 @@ function applyStaticText() {
   el.confirmImportBtn.textContent = t('confirmImport');
   el.cancelScanBtn.textContent = t('cancel');
   el.cancelImportBtn.textContent = t('cancel');
+}
+
+async function markMailPaneReady() {
+  if (layoutMode !== 'mailpane' || !mailPaneToken || mailPaneReadySent) return;
+  if (!(browser.TbMailPane && typeof browser.TbMailPane.markPanelReady === 'function')) return;
+  mailPaneReadySent = true;
+  try {
+    await browser.TbMailPane.markPanelReady(mailPaneToken);
+  } catch (_) {
+    mailPaneReadySent = false;
+  }
+}
+
+async function markMailPaneLoadFailed(reason) {
+  if (layoutMode !== 'mailpane' || !mailPaneToken || mailPaneReadySent || mailPaneFailureSent) return;
+  if (!(browser.TbMailPane && typeof browser.TbMailPane.markPanelLoadFailed === 'function')) return;
+  mailPaneFailureSent = true;
+  try {
+    await browser.TbMailPane.markPanelLoadFailed(mailPaneToken, String(reason || 'Panel initialization failed.'));
+  } catch (_) {
+    mailPaneFailureSent = false;
+  }
 }
 
 function actionError(action, error) {
@@ -1295,11 +1320,13 @@ async function openLLM() {
 
 window.onerror = function(message) {
   setStatusLine(`Panel failed: ${message}`);
+  void markMailPaneLoadFailed(message);
 };
 
 window.onunhandledrejection = function(event) {
   const reason = event.reason && event.reason.message ? event.reason.message : String(event.reason || 'unknown');
   setStatusLine(`Panel failed: ${reason}`);
+  void markMailPaneLoadFailed(reason);
 };
 
 browser.runtime.onMessage.addListener((message) => {
@@ -1329,4 +1356,11 @@ window.addEventListener('beforeunload', saveUiState);
 
 applyStaticText();
 loadUiState();
+if (layoutMode === 'mailpane' && typeof window.requestAnimationFrame === 'function') {
+  window.requestAnimationFrame(() => {
+    void markMailPaneReady();
+  });
+} else {
+  void markMailPaneReady();
+}
 refresh().catch((error) => actionError(t('loadFailed'), error));

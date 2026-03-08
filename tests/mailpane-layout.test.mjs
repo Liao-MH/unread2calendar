@@ -7,7 +7,11 @@ const panelCss = fs.readFileSync(path.resolve('thunderbird-addon/sidebar/panel.c
 
 assert.match(panelJs, /new URLSearchParams\(window\.location\.search\)/, 'panel should read layout mode from query string');
 assert.match(panelJs, /document\.body\.dataset\.layout\s*=\s*layoutMode/, 'panel should expose layout mode on body');
+assert.match(panelJs, /const mailPaneToken = layoutParams\.get\(['"]mailpaneToken['"]\)/, 'panel should read a mailpane readiness token from query string');
+assert.match(panelJs, /browser\.TbMailPane\.markPanelReady\(mailPaneToken\)/, 'panel should report when the embedded mailpane UI becomes ready');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*min-width:\s*0;/, 'mailpane body must remove popup min-width');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*height:\s*100vh;/, 'mailpane body must fill the host height');
+assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*width:\s*100%;/, 'mailpane body should fully occupy the embedded host width');
+assert.match(panelCss, /\.app-shell\s*\{[\s\S]*min-height:\s*0;/, 'app shell should remain embeddable inside the mailpane host');
 
 console.log('mailpane layout tests passed');

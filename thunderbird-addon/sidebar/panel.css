@@ -48,7 +48,7 @@ body {
 
 body[data-layout="mailpane"] {
   padding: 12px;
-  width: auto;
+  width: 100%;
   min-width: 0;
   max-width: none;
   min-height: 0;

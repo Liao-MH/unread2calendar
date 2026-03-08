@@ -3009,8 +3009,8 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
       if (typeof browser.TbMailPane.show === 'function') {
         await browser.TbMailPane.show();
         const paneState = await browser.TbMailPane.getState();
-        if (!paneState.visible) {
-          const err = new Error('Mail pane did not become visible after show().');
+        if (!paneState.visible || (!paneState.contentReady && paneState.loadState !== 'error')) {
+          const err = new Error('Mail pane did not reach a visible ready/error state after show().');
           err.code = 'MAILPANE_NOT_VISIBLE';
           throw err;
         }
@@ -3021,7 +3021,6 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
     errors.push(`TbMailPane: ${formatErrorDetail(error)}`);
   }
 
-  await showTodoPaneOpenFailureAlert();
   const err = new Error(`All UI open methods failed.\n${errors.join('\n\n')}`);
   err.code = 'OPEN_TODO_UI_FAILED';
   throw err;
