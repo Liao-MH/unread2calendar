@@ -7,6 +7,54 @@
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
 
+## v2.0.13 - 2026-03-08
+
+### 用户问题
+- 升级到 `2.0.12` 后，Todo 第四栏直接不显示
+- 这是前一轮“共享行拉伸”修复带来的回归，必须先恢复可见性
+
+### 讨论与决策摘要
+- 根因不是共享行方向本身，而是宿主在共享行中的兄弟顺序
+- 上一版把宿主直接追加到共享容器末尾，实际 Thunderbird 布局下这会把面板放到错误的位置
+- 正确做法是仍然使用共享行容器，但把分隔条和宿主插到 `today-splitter` / `today-pane-panel` 之前
+
+### 已做改动
+- 版本号升级到 `2.0.13`
+- `api/tbMailPane/implementation.js`
+  - `getPaneInsertionPoint()` 新增 `anchor`
+  - 当 `today-splitter` 或 `today-pane-panel` 存在时，分隔条和宿主都改为 `insertBefore(...)`
+  - 保留共享行容器与 `stretch` 逻辑，不回退到旧的 `tabmail-container` 方案
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 新增失败断言，要求实现显式定义 `anchor`
+  - 补充校验分隔条和宿主都必须插入到 `today-pane` 区域之前
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.13`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.13.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.12 - 2026-03-08
 
 ### 用户问题

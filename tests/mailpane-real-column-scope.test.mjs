@@ -8,6 +8,9 @@ assert.match(impl, /getElementById\("tabmail-container"\)/, 'mailpane host shoul
 assert.match(impl, /getElementById\("today-pane-panel"\)/, 'mailpane host should account for the today pane when choosing its row container');
 assert.match(impl, /getElementById\("today-splitter"\)/, 'mailpane host should account for the today splitter when choosing its row container');
 assert.match(impl, /function getPaneInsertionPoint\(/, 'mailpane host should centralize the shared row insertion point');
+assert.match(impl, /anchor:\s*todaySplitter\s*\|\|\s*todayPane\s*\|\|\s*null/, 'mailpane host should define an insertion anchor before the today pane area');
+assert.match(impl, /insertBefore\(splitter,\s*insertionAnchor\)/, 'mailpane splitter should be inserted before the today pane area');
+assert.match(impl, /insertBefore\(host,\s*insertionAnchor\)/, 'mailpane host should be inserted before the today pane area');
 assert.doesNotMatch(impl, /host\.style\.position\s*=\s*"fixed"/, 'mailpane host should no longer be a fixed overlay');
 assert.doesNotMatch(impl, /splitter\.style\.position\s*=\s*"fixed"/, 'mailpane splitter should no longer be a fixed overlay');
 assert.match(impl, /currentTabInfo/, 'mailpane host should inspect the currently selected tab');

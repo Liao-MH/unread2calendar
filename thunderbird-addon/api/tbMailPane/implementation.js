@@ -137,14 +137,16 @@
         container: tabmailRow,
         tabmailContainer,
         todayPane,
-        todaySplitter
+        todaySplitter,
+        anchor: todaySplitter || todayPane || null
       };
     }
     return {
       container: tabmailRow || tabmailContainer,
       tabmailContainer,
       todayPane,
-      todaySplitter
+      todaySplitter,
+      anchor: null
     };
   }
 
@@ -327,6 +329,7 @@
     if (!host) {
       const insertionPoint = getPaneInsertionPoint(doc);
       const paneContainer = insertionPoint && insertionPoint.container;
+      const insertionAnchor = insertionPoint ? insertionPoint.anchor : null;
       if (!paneContainer) return null;
       host = doc.createXULElement("vbox");
       host.setAttribute("id", UI.hostId);
@@ -395,8 +398,8 @@
       splitter.style.alignSelf = "stretch";
       splitter.hidden = true;
 
-      paneContainer.appendChild(splitter);
-      paneContainer.appendChild(host);
+      paneContainer.insertBefore(splitter, insertionAnchor);
+      paneContainer.insertBefore(host, insertionAnchor);
 
       const paneState = {
         container: paneContainer,
