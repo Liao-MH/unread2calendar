@@ -2991,7 +2991,6 @@ function setupContextMenus() {
 
 async function openTodoWindowInCurrentContext(tab, toggle) {
   const errors = [];
-  void toggle;
   const windowId = tab && Number.isInteger(tab.windowId) ? tab.windowId : undefined;
 
   try {
@@ -3007,15 +3006,6 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
     }
   } catch (error) {
     errors.push(`TbMailPane: ${formatErrorDetail(error)}`);
-  }
-
-  try {
-    if (browser.browserAction && typeof browser.browserAction.openPopup === 'function') {
-      await browser.browserAction.openPopup();
-      return;
-    }
-  } catch (error) {
-    errors.push(`browserAction.openPopup: ${formatErrorDetail(error)}`);
   }
 
   try {
