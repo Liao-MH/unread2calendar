@@ -53,6 +53,13 @@ body[data-layout="mailpane"] {
   max-width: none;
   min-height: 0;
   height: 100%;
+  --e2c-mailpane-control-gap: clamp(4px, 1vw, 14px);
+  --e2c-mailpane-control-row-gap: clamp(4px, 0.9vh, 8px);
+  --e2c-mailpane-stack-gap: clamp(6px, 1.2vh, 10px);
+  --e2c-mailpane-group-gap: clamp(6px, 1.1vh, 10px);
+  --e2c-mailpane-card-gap: clamp(6px, 0.9vh, 8px);
+  --e2c-mailpane-card-padding-y: clamp(6px, 0.9vh, 8px);
+  --e2c-mailpane-card-padding-x: clamp(6px, 0.9vw, 8px);
 }
 
 body[data-layout="mailpane"] .app-shell {
@@ -65,26 +72,33 @@ body[data-layout="mailpane"] .app-shell {
 body[data-layout="mailpane"] .top-fixed {
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 1.2vh, 10px);
+  gap: var(--e2c-mailpane-stack-gap);
   min-height: 0;
 }
 
 body[data-layout="mailpane"] .topbar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr));
-  gap: clamp(6px, 1.2vh, 8px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--e2c-mailpane-control-row-gap) var(--e2c-mailpane-control-gap);
+  --e2c-mailpane-button-basis: 9.75rem;
 }
 
 body[data-layout="mailpane"] .taskbar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
-  gap: clamp(6px, 1.2vh, 8px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--e2c-mailpane-control-row-gap) var(--e2c-mailpane-control-gap);
+  --e2c-mailpane-button-basis: 8.75rem;
 }
 
 body[data-layout="mailpane"] .topbar > button,
 body[data-layout="mailpane"] .taskbar > button {
-  width: 100%;
-  min-width: 0;
+  flex: 0 1 var(--e2c-mailpane-button-basis);
+  width: min(100%, var(--e2c-mailpane-button-basis));
+  min-width: min(100%, 8.5rem);
   max-width: 100%;
 }
 
@@ -96,6 +110,8 @@ body[data-layout="mailpane"] .status-box {
 
 body[data-layout="mailpane"] .groups {
   min-height: 0;
+  display: grid;
+  gap: var(--e2c-mailpane-group-gap);
   align-content: start;
   grid-auto-rows: max-content;
   overflow: auto;
@@ -104,9 +120,10 @@ body[data-layout="mailpane"] .groups {
 body[data-layout="mailpane"] .footer {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(6px, 1.2vh, 8px);
+  gap: var(--e2c-mailpane-stack-gap);
   min-height: 0;
   position: static;
+  align-content: start;
 }
 
 body[data-layout="mailpane"] .importBtn,
@@ -117,7 +134,7 @@ body[data-layout="mailpane"] #importBtn {
 body[data-layout="mailpane"] .imported-host {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--e2c-mailpane-card-gap);
   min-width: 0;
 }
 
@@ -136,6 +153,27 @@ body[data-layout="mailpane"] .item,
 body[data-layout="mailpane"] .group-header,
 body[data-layout="mailpane"] .group-head-left {
   min-width: 0;
+}
+
+body[data-layout="mailpane"] .group {
+  padding: var(--e2c-mailpane-card-padding-y) var(--e2c-mailpane-card-padding-x);
+}
+
+body[data-layout="mailpane"] .group-items {
+  margin-top: var(--e2c-mailpane-card-gap);
+  gap: var(--e2c-mailpane-card-gap);
+}
+
+body[data-layout="mailpane"] .item {
+  padding: var(--e2c-mailpane-card-padding-y) var(--e2c-mailpane-card-padding-x);
+  gap: var(--e2c-mailpane-card-gap);
+}
+
+body[data-layout="mailpane"] .duplicate-box,
+body[data-layout="mailpane"] .parent-children {
+  margin-top: var(--e2c-mailpane-card-gap);
+  padding-top: var(--e2c-mailpane-card-gap);
+  gap: var(--e2c-mailpane-card-gap);
 }
 
 body[data-layout="mailpane"] .group-header,

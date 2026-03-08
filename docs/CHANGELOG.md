@@ -1,5 +1,62 @@
 # Changelog
 
+## v2.0.15 - 2026-03-08
+
+### 用户问题
+- 用户确认当前 Todo 第四栏虽然能显示，但顶部按钮和中间待办区仍像固定块，不符合“宽度先缩按钮间距、再换行；高度优先伸缩中间区”的交互预期
+
+### 讨论与决策摘要
+- 根因不在宿主层，而在 `panel.css` 的 mailpane 控制区仍采用 `auto-fit` 栅格，这会直接改变列数，而不是先压缩间距
+- 决策是保持 `2.0.11` 宿主基线不变，只重做 `panel` 内部 mailpane 布局
+- 目标收敛为：
+  - 顶部按钮区与任务区采用稳定按钮基准宽度
+  - 宽度变化时优先调整 `gap`，必要时再换行
+  - 中间待办区承担主要高度伸缩
+  - 底部区保持稳定尾部，不再和中间区争高度
+
+### 已做改动
+- 版本号升级到 `2.0.15`
+- `thunderbird-addon/sidebar/panel.css`
+  - mailpane body 新增控制区/内容区专用响应式变量，分别按宽度和高度调节 `gap`
+  - `.topbar` / `.taskbar` 从 `auto-fit grid` 改为 `flex-wrap` 控制区
+  - 按钮改为稳定基准宽度的 `flex: 0 1 <basis>`，宽度变窄时先缩 `gap`，不足时再换行
+  - `.groups` 的垂直间距改为随高度压缩的动态值
+  - `group/item/duplicate/imported-host/footer` 的卡片内边距和垂直间距改为随高度压缩
+  - footer 保持稳定单列尾部，中间待办区继续承担主要滚动与高度伸缩
+- `tests/mailpane-layout.test.mjs`
+  - 改为校验 mailpane 按钮区使用 wrapped flex row
+  - 校验控制区使用动态 gap 变量，而非 `auto-fit` 栅格
+  - 校验中间区使用动态垂直间距并继续承担主滚动
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.15`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `fix: make mailpane controls shrink gaps before wrapping`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.15.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 本文件记录 Thunderbird 插件每个版本的开发日志，并在每次改动后持续追加。
 
 记录规则：
