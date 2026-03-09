@@ -33,6 +33,7 @@ const el = {
   importedHost: document.getElementById('importedHost'),
   statusBox: document.getElementById('statusBox'),
   versionLine: document.getElementById('versionLine'),
+  toolbarGroups: Array.from(document.querySelectorAll('.toolbar-group')),
   groupTpl: document.getElementById('groupTpl'),
   itemTpl: document.getElementById('itemTpl')
 };
@@ -149,6 +150,7 @@ const I18N = {
 let vm = null;
 let mailPaneReadySent = false;
 let mailPaneFailureSent = false;
+let mailPaneLayoutSyncScheduled = false;
 const PANEL_UI_STATE_KEY = 'todo.panel-ui-state.v1';
 const PANEL_WINDOW_STATE_KEY = 'todo.panel-window-state.v1';
 const PANEL_MIN_WIDTH = 560;
@@ -446,6 +448,35 @@ function applyStaticText() {
   el.confirmImportBtn.textContent = t('confirmImport');
   el.cancelScanBtn.textContent = t('cancel');
   el.cancelImportBtn.textContent = t('cancel');
+}
+
+function isToolbarGroupWrapped(group) {
+  if (!group) return false;
+  const buttons = Array.from(group.querySelectorAll('button'));
+  if (buttons.length < 2) return false;
+  const firstTop = buttons[0].offsetTop;
+  return buttons.some((button) => Math.abs(button.offsetTop - firstTop) > 1);
+}
+
+function syncMailpaneToolbarLayout() {
+  mailPaneLayoutSyncScheduled = false;
+  if (layoutMode !== 'mailpane') return;
+  for (const group of el.toolbarGroups) {
+    const wrapped = isToolbarGroupWrapped(group);
+    group.classList.toggle('toolbar-group--wrapped', wrapped);
+    group.classList.toggle('toolbar-group--single', !wrapped);
+  }
+}
+
+function scheduleMailpaneLayoutSync() {
+  if (layoutMode !== 'mailpane' || mailPaneLayoutSyncScheduled) return;
+  mailPaneLayoutSyncScheduled = true;
+  const run = () => syncMailpaneToolbarLayout();
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(run);
+  } else {
+    setTimeout(run, 0);
+  }
 }
 
 async function markMailPaneReady() {
@@ -1117,6 +1148,7 @@ function render() {
   } else {
     applyScrollTop(prevScrollTop);
   }
+  scheduleMailpaneLayoutSync();
 }
 
 async function refresh() {
@@ -1353,9 +1385,11 @@ el.groups.addEventListener('scroll', () => {
   saveUiState();
 });
 window.addEventListener('beforeunload', saveUiState);
+window.addEventListener('resize', scheduleMailpaneLayoutSync);
 
 applyStaticText();
 loadUiState();
+scheduleMailpaneLayoutSync();
 if (layoutMode === 'mailpane' && typeof window.requestAnimationFrame === 'function') {
   window.requestAnimationFrame(() => {
     void markMailPaneReady();

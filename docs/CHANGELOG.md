@@ -1,5 +1,60 @@
 # Changelog
 
+## v2.0.17 - 2026-03-09
+
+### 用户问题
+- 用户指出 mailpane 分栏变窄时，第一组按钮没有按组内换行，第二组单行时也没有保持居中
+- 用户同时要求底部导入按钮和状态信息始终保持可见，由中间待办区单独承担压缩与滚动
+
+### 讨论与决策摘要
+- 根因是现有 grouped toolbar 只有静态分组，没有“单行居中 / 换行左对齐”的状态切换能力
+- 决策是在 `panel.js` 中按组检测真实换行状态：单行居中，换行后左对齐
+- 页面纵向结构继续限定为三段：顶部固定、底部固定、中间 `groups` 独占滚动；导入记录区改为 footer 内部滚动
+
+### 已做改动
+- 版本号升级到 `2.0.17`
+- `thunderbird-addon/sidebar/panel.js`
+  - 新增每个 toolbar group 的换行检测
+  - mailpane 下按组切换 `toolbar-group--single` / `toolbar-group--wrapped`
+  - 在初始化、渲染后和窗口 resize 后同步按钮组布局状态
+- `thunderbird-addon/sidebar/panel.css`
+  - mailpane 下新增 `.toolbar-group--single` 居中、`.toolbar-group--wrapped` 左对齐
+  - 减小组内横向 gap 与按钮横向 padding，使主操作组在宽度足够时更稳定维持单行
+  - footer 改为固定可见尾部，导入记录区 `imported-host` 改为 footer 内部滚动
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 toolbar group 状态切换、resize 同步、footer 固定可见约束的断言
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.17`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `fix: keep mailpane footer visible and align wrapped toolbar groups`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.17.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s
+' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.16 - 2026-03-09
 
 ### 用户问题

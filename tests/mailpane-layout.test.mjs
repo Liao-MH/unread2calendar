@@ -13,6 +13,10 @@ assert.match(panelJs, /browser\.TbMailPane\.markPanelReady\(mailPaneToken\)/, 'p
 assert.match(panelHtml, /class="toolbar-groups"/, 'mailpane toolbar should introduce an explicit grouped toolbar wrapper');
 assert.match(panelHtml, /class="topbar toolbar-group toolbar-group-primary"/, 'primary actions should live in their own toolbar group');
 assert.match(panelHtml, /class="taskbar toolbar-group toolbar-group-task"/, 'task actions should live in their own toolbar group');
+assert.match(panelJs, /function isToolbarGroupWrapped\(group\)/, 'panel should detect whether a toolbar group has wrapped');
+assert.match(panelJs, /group\.classList\.toggle\('toolbar-group--wrapped'/, 'panel should mark wrapped toolbar groups explicitly');
+assert.match(panelJs, /group\.classList\.toggle\('toolbar-group--single'/, 'panel should mark single-line toolbar groups explicitly');
+assert.match(panelJs, /window\.addEventListener\('resize', scheduleMailpaneLayoutSync\)/, 'panel should resync toolbar layout on resize');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*min-width:\s*0;/, 'mailpane body must remove popup min-width');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*height:\s*100%;/, 'mailpane body must fill the embedded host height without forcing viewport geometry');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*width:\s*100%;/, 'mailpane body should fully occupy the embedded host width');
@@ -25,6 +29,8 @@ assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*\{[\s
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*\{[\s\S]*flex-wrap:\s*wrap;/, 'each toolbar group should wrap internally when width runs out');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*\{[\s\S]*row-gap:\s*var\(--e2c-mailpane-toolbar-row-gap\);/, 'wrapped rows inside a group should use the tighter gap');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*\{[\s\S]*column-gap:\s*var\(--e2c-mailpane-control-gap\);/, 'toolbar groups should still shrink horizontal gaps before wrapping');
+assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group--single\s*\{[\s\S]*justify-content:\s*center;/, 'single-line toolbar groups should stay centered');
+assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group--wrapped\s*\{[\s\S]*justify-content:\s*flex-start;/, 'wrapped toolbar groups should realign to the left');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*>\s*button\s*\{[\s\S]*flex:\s*0\s+0\s+auto;/, 'mailpane toolbar buttons should keep content-driven widths');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*>\s*button\s*\{[\s\S]*white-space:\s*nowrap;/, 'mailpane toolbar buttons should keep labels on one line');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*>\s*button\s*\{[\s\S]*padding-inline:\s*/, 'mailpane toolbar buttons should use content-sized inline padding');
@@ -33,5 +39,7 @@ assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.groups\s*\{[\s\S]*ove
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.groups\s*\{[\s\S]*gap:\s*var\(--e2c-mailpane-group-gap\);/, 'mailpane groups area should compress internal vertical spacing as height shrinks');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.footer\s*\{[\s\S]*display:\s*grid;/, 'mailpane footer should remain a stable stacked tail section');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.footer\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\);/, 'mailpane footer should stack modules vertically in narrow widths');
+assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.footer\s*\{[\s\S]*overflow:\s*hidden;/, 'mailpane footer should keep its visible region stable');
+assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.imported-host\s*\{[\s\S]*overflow:\s*auto;/, 'mailpane imported section should scroll inside the footer instead of pushing it away');
 
 console.log('mailpane layout tests passed');

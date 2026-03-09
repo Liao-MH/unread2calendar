@@ -53,7 +53,7 @@ body[data-layout="mailpane"] {
   max-width: none;
   min-height: 0;
   height: 100%;
-  --e2c-mailpane-control-gap: clamp(4px, 1vw, 14px);
+  --e2c-mailpane-control-gap: clamp(3px, 0.8vw, 10px);
   --e2c-mailpane-toolbar-row-gap: clamp(4px, 0.8vh, 7px);
   --e2c-mailpane-toolbar-group-gap: clamp(8px, 1.5vh, 12px);
   --e2c-mailpane-stack-gap: clamp(6px, 1.2vh, 10px);
@@ -75,6 +75,7 @@ body[data-layout="mailpane"] .top-fixed {
   flex-direction: column;
   gap: var(--e2c-mailpane-stack-gap);
   min-height: 0;
+  flex: 0 0 auto;
 }
 
 body[data-layout="mailpane"] .toolbar-groups {
@@ -88,10 +89,17 @@ body[data-layout="mailpane"] .toolbar-group {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  justify-content: flex-start;
   row-gap: var(--e2c-mailpane-toolbar-row-gap);
   column-gap: var(--e2c-mailpane-control-gap);
   min-width: 0;
+}
+
+body[data-layout="mailpane"] .toolbar-group--single {
+  justify-content: center;
+}
+
+body[data-layout="mailpane"] .toolbar-group--wrapped {
+  justify-content: flex-start;
 }
 
 body[data-layout="mailpane"] .toolbar-group > button {
@@ -100,7 +108,7 @@ body[data-layout="mailpane"] .toolbar-group > button {
   min-width: 0;
   max-width: 100%;
   white-space: nowrap;
-  padding-inline: calc(0.9em + 1ch);
+  padding-inline: 1ch;
 }
 
 body[data-layout="mailpane"] .toolbar-group-primary > button {
@@ -124,15 +132,20 @@ body[data-layout="mailpane"] .groups {
   align-content: start;
   grid-auto-rows: max-content;
   overflow: auto;
+  flex: 1 1 auto;
 }
 
 body[data-layout="mailpane"] .footer {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: var(--e2c-mailpane-stack-gap);
   min-height: 0;
   position: static;
   align-content: start;
+  flex: 0 0 auto;
+  max-height: min(34vh, 240px);
+  overflow: hidden;
 }
 
 body[data-layout="mailpane"] .importBtn,
@@ -145,6 +158,8 @@ body[data-layout="mailpane"] .imported-host {
   flex-direction: column;
   gap: var(--e2c-mailpane-card-gap);
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
 }
 
 body[data-layout="mailpane"] .status-box {
