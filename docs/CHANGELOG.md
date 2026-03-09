@@ -1,5 +1,64 @@
 # Changelog
 
+## v2.0.16 - 2026-03-09
+
+### 用户问题
+- 用户指出当前 mailpane 顶部按钮区即使在空间充足时也会提前换行，不符合邮件工具栏式的稳定两组布局
+- 期望默认固定两组：主操作组在上、任务组在下；空间不足时只允许组内继续拆行，不允许跨组混排
+
+### 讨论与决策摘要
+- 根因是 `v2.0.15` 仍把按钮区当作自由流动的普通响应式容器，浏览器会过早触发换行
+- 决策是停止让浏览器自由排布，改成显式分组工具条：
+  - 第一组：`扫描未读 / 刷新 / 全部展开 / 配置 / 清屏`
+  - 第二组：`暂停 / 继续 / 取消任务`
+- 组内允许换行，组间距大于组内行距；按钮始终单行，宽度按内容驱动
+
+### 已做改动
+- 版本号升级到 `2.0.16`
+- `thunderbird-addon/sidebar/panel.html`
+  - 顶部控制区新增 `toolbar-groups` 容器
+  - 主操作按钮放入 `toolbar-group-primary`
+  - 任务按钮放入 `toolbar-group-task`
+- `thunderbird-addon/sidebar/panel.css`
+  - mailpane 下新增显式组间距与组内行距变量
+  - 顶部工具区改为“组容器纵向堆叠 + 组内 flex-wrap”
+  - 按钮改为 `flex: 0 0 auto`，保持内容驱动宽度
+  - 按钮强制 `white-space: nowrap`，不允许文本折行
+  - 按钮 `padding-inline` 调整为内容宽度 + 额外字符留白，不再整排拉伸铺满
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 `toolbar-groups` / `toolbar-group-primary` / `toolbar-group-task` 的结构断言
+  - 改为校验“组间距”和“组内换行”规则，而不是泛化的自由流布局
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.16`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.html`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `fix: group mailpane toolbar controls`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.16.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.15 - 2026-03-08
 
 ### 用户问题

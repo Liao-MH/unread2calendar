@@ -54,7 +54,8 @@ body[data-layout="mailpane"] {
   min-height: 0;
   height: 100%;
   --e2c-mailpane-control-gap: clamp(4px, 1vw, 14px);
-  --e2c-mailpane-control-row-gap: clamp(4px, 0.9vh, 8px);
+  --e2c-mailpane-toolbar-row-gap: clamp(4px, 0.8vh, 7px);
+  --e2c-mailpane-toolbar-group-gap: clamp(8px, 1.5vh, 12px);
   --e2c-mailpane-stack-gap: clamp(6px, 1.2vh, 10px);
   --e2c-mailpane-group-gap: clamp(6px, 1.1vh, 10px);
   --e2c-mailpane-card-gap: clamp(6px, 0.9vh, 8px);
@@ -76,30 +77,38 @@ body[data-layout="mailpane"] .top-fixed {
   min-height: 0;
 }
 
-body[data-layout="mailpane"] .topbar {
+body[data-layout="mailpane"] .toolbar-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2c-mailpane-toolbar-group-gap);
+  min-width: 0;
+}
+
+body[data-layout="mailpane"] .toolbar-group {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
   justify-content: flex-start;
-  gap: var(--e2c-mailpane-control-row-gap) var(--e2c-mailpane-control-gap);
-  --e2c-mailpane-button-basis: 9.75rem;
+  row-gap: var(--e2c-mailpane-toolbar-row-gap);
+  column-gap: var(--e2c-mailpane-control-gap);
+  min-width: 0;
 }
 
-body[data-layout="mailpane"] .taskbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: var(--e2c-mailpane-control-row-gap) var(--e2c-mailpane-control-gap);
-  --e2c-mailpane-button-basis: 8.75rem;
-}
-
-body[data-layout="mailpane"] .topbar > button,
-body[data-layout="mailpane"] .taskbar > button {
-  flex: 0 1 var(--e2c-mailpane-button-basis);
-  width: min(100%, var(--e2c-mailpane-button-basis));
-  min-width: min(100%, 8.5rem);
+body[data-layout="mailpane"] .toolbar-group > button {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
   max-width: 100%;
+  white-space: nowrap;
+  padding-inline: calc(0.9em + 1ch);
+}
+
+body[data-layout="mailpane"] .toolbar-group-primary > button {
+  flex-basis: auto;
+}
+
+body[data-layout="mailpane"] .toolbar-group-task > button {
+  flex-basis: auto;
 }
 
 body[data-layout="mailpane"] .context-box,

@@ -9,17 +9,19 @@
 <body>
   <div class="app-shell">
     <div class="top-fixed">
-      <header class="topbar">
-        <button id="scanBtn" class="primary">Scan Unread</button>
-        <button id="refreshBtn">Refresh</button>
-        <button id="expandAllBtn">Expand/Collapse All</button>
-        <button id="llmBtn">LLM</button>
-        <button id="clearBtn">Clear</button>
-      </header>
-      <div class="taskbar">
-        <button id="pauseTaskBtn">Pause</button>
-        <button id="resumeTaskBtn">Resume</button>
-        <button id="cancelTaskBtn">Cancel</button>
+      <div class="toolbar-groups">
+        <header class="topbar toolbar-group toolbar-group-primary">
+          <button id="scanBtn" class="primary">Scan Unread</button>
+          <button id="refreshBtn">Refresh</button>
+          <button id="expandAllBtn">Expand/Collapse All</button>
+          <button id="llmBtn">LLM</button>
+          <button id="clearBtn">Clear</button>
+        </header>
+        <div class="taskbar toolbar-group toolbar-group-task">
+          <button id="pauseTaskBtn">Pause</button>
+          <button id="resumeTaskBtn">Resume</button>
+          <button id="cancelTaskBtn">Cancel</button>
+        </div>
       </div>
 
       <section id="setupHint" class="hint" hidden>LLM not configured. Running local rules.</section>
