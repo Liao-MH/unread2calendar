@@ -1430,10 +1430,10 @@ async function saveLLMSection() {
     const saved = await browser.runtime.sendMessage({
       type: 'todo:set-settings',
       settings: {
-        ...collectLLMSettingsPayload(),
         ...collectPromptSettingsPayload(),
         ...collectGroupsPayload(),
-        ...collectProcessingPayload()
+        ...collectProcessingPayload(),
+        ...collectLLMSettingsPayload()
       }
     });
     state.settings = { ...saved };
