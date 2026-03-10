@@ -11,11 +11,16 @@ assert.match(panelJs, /document\.body\.dataset\.layout\s*=\s*layoutMode/, 'panel
 assert.match(panelJs, /const mailPaneToken = layoutParams\.get\(['"]mailpaneToken['"]\)/, 'panel should read a mailpane readiness token from query string');
 assert.match(panelJs, /browser\.TbMailPane\.markPanelReady\(mailPaneToken\)/, 'panel should report when the embedded mailpane UI becomes ready');
 assert.match(panelHtml, /class="toolbar-groups"/, 'mailpane toolbar should introduce an explicit grouped toolbar wrapper');
+assert.match(panelHtml, /class="app-shell"/, 'mailpane panel should expose a stable app shell for container-based layout observation');
 assert.match(panelHtml, /class="topbar toolbar-group toolbar-group-primary"/, 'primary actions should live in their own toolbar group');
 assert.match(panelHtml, /class="taskbar toolbar-group toolbar-group-task"/, 'task actions should live in their own toolbar group');
 assert.match(panelJs, /function isToolbarGroupWrapped\(group\)/, 'panel should detect whether a toolbar group has wrapped');
 assert.match(panelJs, /group\.classList\.toggle\('toolbar-group--wrapped'/, 'panel should mark wrapped toolbar groups explicitly');
 assert.match(panelJs, /group\.classList\.toggle\('toolbar-group--single'/, 'panel should mark single-line toolbar groups explicitly');
+assert.match(panelJs, /new ResizeObserver\(/, 'mailpane should observe its real container size instead of relying only on window resize');
+assert.match(panelJs, /function connectMailpaneResizeObserver\(\)/, 'mailpane should encapsulate ResizeObserver wiring');
+assert.match(panelJs, /mailPaneResizeObserver\.observe\(/, 'mailpane should start observing the live panel container');
+assert.match(panelJs, /mailPaneResizeObserver\.disconnect\(\)/, 'mailpane should disconnect its ResizeObserver during cleanup');
 assert.match(panelJs, /window\.addEventListener\('resize', scheduleMailpaneLayoutSync\)/, 'panel should resync toolbar layout on resize');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*min-width:\s*0;/, 'mailpane body must remove popup min-width');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*height:\s*100%;/, 'mailpane body must fill the embedded host height without forcing viewport geometry');

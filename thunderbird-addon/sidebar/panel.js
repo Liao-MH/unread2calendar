@@ -6,6 +6,7 @@ const mailPaneToken = layoutParams.get('mailpaneToken');
 document.body.dataset.layout = layoutMode;
 
 const el = {
+  appShell: document.querySelector('.app-shell'),
   scanBtn: document.getElementById('scanBtn'),
   refreshBtn: document.getElementById('refreshBtn'),
   expandAllBtn: document.getElementById('expandAllBtn'),
@@ -151,6 +152,7 @@ let vm = null;
 let mailPaneReadySent = false;
 let mailPaneFailureSent = false;
 let mailPaneLayoutSyncScheduled = false;
+let mailPaneResizeObserver = null;
 const PANEL_UI_STATE_KEY = 'todo.panel-ui-state.v1';
 const PANEL_WINDOW_STATE_KEY = 'todo.panel-window-state.v1';
 const PANEL_MIN_WIDTH = 560;
@@ -477,6 +479,27 @@ function scheduleMailpaneLayoutSync() {
   } else {
     setTimeout(run, 0);
   }
+}
+
+function disconnectMailpaneResizeObserver() {
+  if (!mailPaneResizeObserver) return;
+  try {
+    mailPaneResizeObserver.disconnect();
+  } catch (_) {
+    // Ignore cleanup failures.
+  }
+  mailPaneResizeObserver = null;
+}
+
+function connectMailpaneResizeObserver() {
+  if (layoutMode !== 'mailpane' || typeof ResizeObserver !== 'function') return;
+  disconnectMailpaneResizeObserver();
+  const target = el.appShell || document.body;
+  if (!target) return;
+  mailPaneResizeObserver = new ResizeObserver(() => {
+    scheduleMailpaneLayoutSync();
+  });
+  mailPaneResizeObserver.observe(target);
 }
 
 async function markMailPaneReady() {
@@ -1386,9 +1409,11 @@ el.groups.addEventListener('scroll', () => {
 });
 window.addEventListener('beforeunload', saveUiState);
 window.addEventListener('resize', scheduleMailpaneLayoutSync);
+window.addEventListener('beforeunload', disconnectMailpaneResizeObserver);
 
 applyStaticText();
 loadUiState();
+connectMailpaneResizeObserver();
 scheduleMailpaneLayoutSync();
 if (layoutMode === 'mailpane' && typeof window.requestAnimationFrame === 'function') {
   window.requestAnimationFrame(() => {

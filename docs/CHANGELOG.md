@@ -1,5 +1,54 @@
 # Changelog
 
+## v2.0.18 - 2026-03-09
+
+### 用户问题
+- 用户指出 mailpane 首次加载时能适配当前窗口，但拖动分栏宽度或改变 Thunderbird 窗口高度后，布局不会继续自动调整
+- 直接症状是顶部按钮不按实时宽度换行，分栏显示范围也不会随容器变化持续重排
+
+### 讨论与决策摘要
+- 根因不是 Thunderbird 宿主一定没变化，而是 `panel.js` 只在初始化、渲染后和 `window.resize` 后同步布局
+- mailpane 分栏宽度变化属于嵌入容器尺寸变化，并不保证会触发扩展页面自身的 `window.resize`
+- 决策是在 mailpane 模式下引入 `ResizeObserver`，直接监听 `.app-shell` 的真实尺寸变化，按容器尺寸实时重排工具条和内容区
+
+### 已做改动
+- 版本号升级到 `2.0.18`
+- `thunderbird-addon/sidebar/panel.js`
+  - 新增 `ResizeObserver` 驱动的 mailpane 布局同步
+  - 新增 `connectMailpaneResizeObserver()` / `disconnectMailpaneResizeObserver()`
+  - 观察 `.app-shell` 尺寸变化，而不是只依赖 `window.resize`
+  - 在 mailpane 初始化时自动接入 observer，并在卸载时清理
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 `ResizeObserver`、观察目标和清理逻辑的断言
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.18`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.js`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `fix: observe mailpane container resizes`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.18.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.17 - 2026-03-09
 
 ### 用户问题
