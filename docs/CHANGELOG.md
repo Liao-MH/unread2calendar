@@ -33,7 +33,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
-- `fix: observe mailpane container resizes`
+- `d4cda49 fix: observe mailpane container resizes`
 
 ### XPI 路径
 - `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.18.xpi`
@@ -86,7 +86,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
-- `fix: keep mailpane footer visible and align wrapped toolbar groups`
+- `be1eb5a fix: keep mailpane footer visible and align wrapped toolbar groups`
 
 ### XPI 路径
 - `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.17.xpi`
@@ -97,8 +97,7 @@
   - `node tests/mailpane-real-column-scope.test.mjs`
   - `node tests/release-version.test.mjs`
 - 全量测试通过：
-  - `printf '%s
-' tests/*.test.mjs | sort | xargs -n1 node`
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
 - 代码格式与补丁检查通过：
   - `git diff --check`
 - 打包通过：
@@ -146,7 +145,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
-- `fix: group mailpane toolbar controls`
+- `2b1216d fix: group mailpane toolbar controls`
 
 ### XPI 路径
 - `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.16.xpi`
@@ -203,7 +202,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
-- `fix: make mailpane controls shrink gaps before wrapping`
+- `258b1e0 fix: make mailpane controls shrink gaps before wrapping`
 
 ### XPI 路径
 - `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.15.xpi`
