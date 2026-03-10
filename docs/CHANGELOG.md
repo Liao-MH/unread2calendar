@@ -1,5 +1,54 @@
 # Changelog
 
+## v2.0.19 - 2026-03-10
+
+### 用户问题
+- 用户已填写 OpenAI 的 `Base URL / Model / API Key`，并且配置页测试连接成功，但主界面仍显示“LLM未配置，正在使用本地规则”
+- 实际扫描行为也仍走本地规则，说明问题不只是提示文案错误，而是后台确实没有把 LLM 判定为已配置
+
+### 讨论与决策摘要
+- 根因不在 `hasLLM(settings)` 的判定条件本身，而在配置页 `saveLLMSection()` 的保存 payload 组装顺序
+- `collectPromptSettingsPayload()`、`collectGroupsPayload()`、`collectProcessingPayload()` 都会再次展开旧的 `state.settings`
+- 这些旧值在 `collectLLMSettingsPayload()` 之后展开，导致刚输入的 `llmBaseUrl / llmModel / llmApiKey` 被旧状态覆盖回去
+- 结果是“测试连接”使用当前表单值能成功，但真正持久化到后台的 LLM 三项仍是旧值或空值
+- 决策是只做最小修复：保持现有保存路径不变，但把 `collectLLMSettingsPayload()` 放到最后展开，确保当前 LLM 三项最终写入存储
+
+### 已做改动
+- 版本号升级到 `2.0.19`
+- `thunderbird-addon/options/options.js`
+  - 修正 `saveLLMSection()` 的 payload 合并顺序
+  - 让 `llmBaseUrl / llmModel / llmApiKey` 在保存时始终以当前表单值为准，不再被旧 `state.settings` 覆盖
+- `tests/llm-save-payload-order.test.mjs`
+  - 新增回归测试，要求 `collectLLMSettingsPayload()` 在 `saveLLMSection()` 中最后应用
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.19`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/options/options.js`
+- `tests/llm-save-payload-order.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `fd8546c fix: persist llm settings on save`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.19.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/llm-save-payload-order.test.mjs`
+  - `node tests/options-provider-presets.test.mjs`
+  - `node tests/local-llm-support.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.18 - 2026-03-09
 
 ### 用户问题
