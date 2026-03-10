@@ -33,6 +33,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
+- `2062f2b docs(plan): add mailpane resize observer reflow design`
 - `d4cda49 fix: observe mailpane container resizes`
 
 ### XPI 路径
@@ -86,6 +87,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
+- `6dfdf7b docs(plan): add centered wrap and fixed footer design`
 - `be1eb5a fix: keep mailpane footer visible and align wrapped toolbar groups`
 
 ### XPI 路径
@@ -145,6 +147,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
+- `00a0c60 docs(plan): add mailpane toolbar grouped wrap design`
 - `2b1216d fix: group mailpane toolbar controls`
 
 ### XPI 路径
@@ -272,7 +275,7 @@
 - `docs/CHANGELOG.md`
 
 ### Commit 列表
-- `fix: restore mailpane host baseline and reflow layout`
+- `e935ba5 fix: restore mailpane host baseline and reflow layout`
 
 ### XPI 路径
 - `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.14.xpi`
