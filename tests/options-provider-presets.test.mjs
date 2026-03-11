@@ -16,6 +16,6 @@ assert.match(optionsJs, /refreshProviderPresets/, 'options should support refres
 assert.match(optionsJs, /applyLocalizedUi\(\)/, 'options should apply localized labels for key controls');
 assert.match(optionsJs, /"nonTodo":\s*\{\s*"summary":\s*"\.\.\."/, 'options default prompt should include nonTodo.summary contract');
 assert.match(optionsJs, /for \(let attempt = 1; attempt <= 3; attempt \+= 1\)/, 'options remote model fetch should retry transient failures');
-assert.match(optionsJs, /controller\.abort\(\)/, 'options remote model fetch should enforce timeout via AbortController');
+assert.match(optionsJs, /setTimeout\(\(\)\s*=>\s*controller\.abort\(\),\s*5000\)/, 'options remote model fetch should abort after 5 seconds');
 
 console.log('options provider preset tests passed');

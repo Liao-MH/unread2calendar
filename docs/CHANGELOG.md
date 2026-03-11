@@ -1,11 +1,888 @@
 # Changelog
 
+## v2.0.19 - 2026-03-10
+
+### 用户问题
+- 用户已填写 OpenAI 的 `Base URL / Model / API Key`，并且配置页测试连接成功，但主界面仍显示“LLM未配置，正在使用本地规则”
+- 实际扫描行为也仍走本地规则，说明问题不只是提示文案错误，而是后台确实没有把 LLM 判定为已配置
+
+### 讨论与决策摘要
+- 根因不在 `hasLLM(settings)` 的判定条件本身，而在配置页 `saveLLMSection()` 的保存 payload 组装顺序
+- `collectPromptSettingsPayload()`、`collectGroupsPayload()`、`collectProcessingPayload()` 都会再次展开旧的 `state.settings`
+- 这些旧值在 `collectLLMSettingsPayload()` 之后展开，导致刚输入的 `llmBaseUrl / llmModel / llmApiKey` 被旧状态覆盖回去
+- 结果是“测试连接”使用当前表单值能成功，但真正持久化到后台的 LLM 三项仍是旧值或空值
+- 决策是只做最小修复：保持现有保存路径不变，但把 `collectLLMSettingsPayload()` 放到最后展开，确保当前 LLM 三项最终写入存储
+
+### 已做改动
+- 版本号升级到 `2.0.19`
+- `thunderbird-addon/options/options.js`
+  - 修正 `saveLLMSection()` 的 payload 合并顺序
+  - 让 `llmBaseUrl / llmModel / llmApiKey` 在保存时始终以当前表单值为准，不再被旧 `state.settings` 覆盖
+- `tests/llm-save-payload-order.test.mjs`
+  - 新增回归测试，要求 `collectLLMSettingsPayload()` 在 `saveLLMSection()` 中最后应用
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.19`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/options/options.js`
+- `tests/llm-save-payload-order.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `fd8546c fix: persist llm settings on save`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.19.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/llm-save-payload-order.test.mjs`
+  - `node tests/options-provider-presets.test.mjs`
+  - `node tests/local-llm-support.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.18 - 2026-03-09
+
+### 用户问题
+- 用户指出 mailpane 首次加载时能适配当前窗口，但拖动分栏宽度或改变 Thunderbird 窗口高度后，布局不会继续自动调整
+- 直接症状是顶部按钮不按实时宽度换行，分栏显示范围也不会随容器变化持续重排
+
+### 讨论与决策摘要
+- 根因不是 Thunderbird 宿主一定没变化，而是 `panel.js` 只在初始化、渲染后和 `window.resize` 后同步布局
+- mailpane 分栏宽度变化属于嵌入容器尺寸变化，并不保证会触发扩展页面自身的 `window.resize`
+- 决策是在 mailpane 模式下引入 `ResizeObserver`，直接监听 `.app-shell` 的真实尺寸变化，按容器尺寸实时重排工具条和内容区
+
+### 已做改动
+- 版本号升级到 `2.0.18`
+- `thunderbird-addon/sidebar/panel.js`
+  - 新增 `ResizeObserver` 驱动的 mailpane 布局同步
+  - 新增 `connectMailpaneResizeObserver()` / `disconnectMailpaneResizeObserver()`
+  - 观察 `.app-shell` 尺寸变化，而不是只依赖 `window.resize`
+  - 在 mailpane 初始化时自动接入 observer，并在卸载时清理
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 `ResizeObserver`、观察目标和清理逻辑的断言
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.18`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.js`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `2062f2b docs(plan): add mailpane resize observer reflow design`
+- `d4cda49 fix: observe mailpane container resizes`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.18.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.17 - 2026-03-09
+
+### 用户问题
+- 用户指出 mailpane 分栏变窄时，第一组按钮没有按组内换行，第二组单行时也没有保持居中
+- 用户同时要求底部导入按钮和状态信息始终保持可见，由中间待办区单独承担压缩与滚动
+
+### 讨论与决策摘要
+- 根因是现有 grouped toolbar 只有静态分组，没有“单行居中 / 换行左对齐”的状态切换能力
+- 决策是在 `panel.js` 中按组检测真实换行状态：单行居中，换行后左对齐
+- 页面纵向结构继续限定为三段：顶部固定、底部固定、中间 `groups` 独占滚动；导入记录区改为 footer 内部滚动
+
+### 已做改动
+- 版本号升级到 `2.0.17`
+- `thunderbird-addon/sidebar/panel.js`
+  - 新增每个 toolbar group 的换行检测
+  - mailpane 下按组切换 `toolbar-group--single` / `toolbar-group--wrapped`
+  - 在初始化、渲染后和窗口 resize 后同步按钮组布局状态
+- `thunderbird-addon/sidebar/panel.css`
+  - mailpane 下新增 `.toolbar-group--single` 居中、`.toolbar-group--wrapped` 左对齐
+  - 减小组内横向 gap 与按钮横向 padding，使主操作组在宽度足够时更稳定维持单行
+  - footer 改为固定可见尾部，导入记录区 `imported-host` 改为 footer 内部滚动
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 toolbar group 状态切换、resize 同步、footer 固定可见约束的断言
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.17`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `6dfdf7b docs(plan): add centered wrap and fixed footer design`
+- `be1eb5a fix: keep mailpane footer visible and align wrapped toolbar groups`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.17.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.16 - 2026-03-09
+
+### 用户问题
+- 用户指出当前 mailpane 顶部按钮区即使在空间充足时也会提前换行，不符合邮件工具栏式的稳定两组布局
+- 期望默认固定两组：主操作组在上、任务组在下；空间不足时只允许组内继续拆行，不允许跨组混排
+
+### 讨论与决策摘要
+- 根因是 `v2.0.15` 仍把按钮区当作自由流动的普通响应式容器，浏览器会过早触发换行
+- 决策是停止让浏览器自由排布，改成显式分组工具条：
+  - 第一组：`扫描未读 / 刷新 / 全部展开 / 配置 / 清屏`
+  - 第二组：`暂停 / 继续 / 取消任务`
+- 组内允许换行，组间距大于组内行距；按钮始终单行，宽度按内容驱动
+
+### 已做改动
+- 版本号升级到 `2.0.16`
+- `thunderbird-addon/sidebar/panel.html`
+  - 顶部控制区新增 `toolbar-groups` 容器
+  - 主操作按钮放入 `toolbar-group-primary`
+  - 任务按钮放入 `toolbar-group-task`
+- `thunderbird-addon/sidebar/panel.css`
+  - mailpane 下新增显式组间距与组内行距变量
+  - 顶部工具区改为“组容器纵向堆叠 + 组内 flex-wrap”
+  - 按钮改为 `flex: 0 0 auto`，保持内容驱动宽度
+  - 按钮强制 `white-space: nowrap`，不允许文本折行
+  - 按钮 `padding-inline` 调整为内容宽度 + 额外字符留白，不再整排拉伸铺满
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 `toolbar-groups` / `toolbar-group-primary` / `toolbar-group-task` 的结构断言
+  - 改为校验“组间距”和“组内换行”规则，而不是泛化的自由流布局
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.16`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.html`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `00a0c60 docs(plan): add mailpane toolbar grouped wrap design`
+- `2b1216d fix: group mailpane toolbar controls`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.16.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.15 - 2026-03-08
+
+### 用户问题
+- 用户确认当前 Todo 第四栏虽然能显示，但顶部按钮和中间待办区仍像固定块，不符合“宽度先缩按钮间距、再换行；高度优先伸缩中间区”的交互预期
+
+### 讨论与决策摘要
+- 根因不在宿主层，而在 `panel.css` 的 mailpane 控制区仍采用 `auto-fit` 栅格，这会直接改变列数，而不是先压缩间距
+- 决策是保持 `2.0.11` 宿主基线不变，只重做 `panel` 内部 mailpane 布局
+- 目标收敛为：
+  - 顶部按钮区与任务区采用稳定按钮基准宽度
+  - 宽度变化时优先调整 `gap`，必要时再换行
+  - 中间待办区承担主要高度伸缩
+  - 底部区保持稳定尾部，不再和中间区争高度
+
+### 已做改动
+- 版本号升级到 `2.0.15`
+- `thunderbird-addon/sidebar/panel.css`
+  - mailpane body 新增控制区/内容区专用响应式变量，分别按宽度和高度调节 `gap`
+  - `.topbar` / `.taskbar` 从 `auto-fit grid` 改为 `flex-wrap` 控制区
+  - 按钮改为稳定基准宽度的 `flex: 0 1 <basis>`，宽度变窄时先缩 `gap`，不足时再换行
+  - `.groups` 的垂直间距改为随高度压缩的动态值
+  - `group/item/duplicate/imported-host/footer` 的卡片内边距和垂直间距改为随高度压缩
+  - footer 保持稳定单列尾部，中间待办区继续承担主要滚动与高度伸缩
+- `tests/mailpane-layout.test.mjs`
+  - 改为校验 mailpane 按钮区使用 wrapped flex row
+  - 校验控制区使用动态 gap 变量，而非 `auto-fit` 栅格
+  - 校验中间区使用动态垂直间距并继续承担主滚动
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.15`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `258b1e0 fix: make mailpane controls shrink gaps before wrapping`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.15.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 本文件记录 Thunderbird 插件每个版本的开发日志，并在每次改动后持续追加。
 
 记录规则：
 - 按版本倒序（最新在最上）。
 - 每个版本包含：用户问题、讨论与决策摘要、已做改动、影响文件、Commit 列表、XPI 路径、验证结果。
 - 同一版本内多次迭代时，持续追加到同一版本区块。
+
+## v2.0.14 - 2026-03-08
+
+### 用户问题
+- 用户要求先回退到 `2.0.11`，再重新解决 mailpane 内部布局不会随分栏宽高真实变化的问题
+- `2.0.12` / `2.0.13` 的宿主层试验已经带来连续回归，不应继续作为后续布局修复的基线
+
+### 讨论与决策摘要
+- 根因拆分为两层：
+  - `2.0.12` / `2.0.13` 的可见性回归来自 `TbMailPane` 宿主层对 `today-pane` 共享行与插入顺序的试探
+  - “布局不改变”仍然是 `panel.css` 的问题，属于内嵌侧栏的内容布局，不属于 Thunderbird 宿主几何
+- 决策是严格回退宿主层到 `2.0.11` 基线，再只在 `panel` 层重新做 mailpane 布局
+- 布局修复目标收敛为流式侧栏：控制区 `auto-fit` 重排，中间区主滚动，footer 纵向堆叠
+
+### 已做改动
+- 版本号升级到 `2.0.14`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+  - 功能性恢复到 `2.0.11` 宿主基线
+  - 移除 `today-pane-panel` / `today-splitter` 相关共享行插入逻辑
+  - 恢复直接挂载到 `tabmail-container` 的稳定实现
+- `thunderbird-addon/sidebar/panel.css`
+  - `mailpane` 模式 body 改为 `height: 100%`，不再强绑视口高度
+  - `.app-shell` 改为 `auto / minmax(0, 1fr) / auto` 的嵌入式 grid 外壳
+  - `.topbar` / `.taskbar` 改为 `repeat(auto-fit, minmax(min(...), 1fr))` 的流式 grid
+  - mailpane 下按钮占满各自网格单元，随宽度真实换行重排
+  - `.groups` 明确承担主滚动并保持 `min-height: 0`
+  - `.footer` 改为单列 stacked grid
+  - `.group-header` 改为 `minmax(0, 1fr) auto` 布局，避免窄栏下标题和按钮互相挤压
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 改为校验 `2.0.11` 宿主基线，不再接受 `today-pane` DOM 依赖
+- `tests/mailpane-layout.test.mjs`
+  - 改为校验更强的流式布局目标：嵌入式 grid shell、`auto-fit` 控制区、stacked footer、流式 group header
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.14`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- `e935ba5 fix: restore mailpane host baseline and reflow layout`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.14.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 代码格式与补丁检查通过：
+  - `git diff --check`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.13 - 2026-03-08
+
+### 用户问题
+- 升级到 `2.0.12` 后，Todo 第四栏直接不显示
+- 这是前一轮“共享行拉伸”修复带来的回归，必须先恢复可见性
+
+### 讨论与决策摘要
+- 根因不是共享行方向本身，而是宿主在共享行中的兄弟顺序
+- 上一版把宿主直接追加到共享容器末尾，实际 Thunderbird 布局下这会把面板放到错误的位置
+- 正确做法是仍然使用共享行容器，但把分隔条和宿主插到 `today-splitter` / `today-pane-panel` 之前
+
+### 已做改动
+- 版本号升级到 `2.0.13`
+- `api/tbMailPane/implementation.js`
+  - `getPaneInsertionPoint()` 新增 `anchor`
+  - 当 `today-splitter` 或 `today-pane-panel` 存在时，分隔条和宿主都改为 `insertBefore(...)`
+  - 保留共享行容器与 `stretch` 逻辑，不回退到旧的 `tabmail-container` 方案
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 新增失败断言，要求实现显式定义 `anchor`
+  - 补充校验分隔条和宿主都必须插入到 `today-pane` 区域之前
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.13`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.13.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.12 - 2026-03-08
+
+### 用户问题
+- 在“窗口很宽但高度不足”的场景下，第四栏没有覆盖到最右侧，右边残留空白区域
+- 同一场景下，第四栏整体高度表现不稳定，内容看起来像没有完全铺满宿主行
+
+### 讨论与决策摘要
+- 根因不在 `panel.css`，而在 `TbMailPane` 宿主插入层级：当前宿主直接挂在 `tabmail-container`，没有把 `today-pane-panel` 所在右侧区域纳入同一横向容器
+- 另一个问题是宿主仍依赖 `height: 100%`，在矮窗口里不如沿共享行做 `stretch` 稳定
+- 这次修复收敛在宿主层：改用 `tabmail-container` 与 `today-pane-panel` 的共享行容器，并让宿主与分隔条沿该行拉伸
+
+### 已做改动
+- 版本号升级到 `2.0.12`
+- `api/tbMailPane/implementation.js`
+  - 新增 `getPaneInsertionPoint()`，用来选择 `tabmail-container` 和 `today-pane-panel` 的共享横向容器
+  - 宿主与分隔条不再只依赖 `tabmail-container`，而是插入到更外层共享行中
+  - 宿主与分隔条改为 `alignSelf = "stretch"`，移除几何层里的 `height = "100%"`
+  - 宽度拖拽继续沿共享容器右边界计算，避免宽窗口下右侧残留空白区域
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 先新增失败断言，要求实现显式处理 `today-pane-panel` / `today-splitter`
+  - 补充校验共享插入点函数和纵向拉伸规则
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.12`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.12.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.11 - 2026-03-08
+
+### 用户问题
+- 第四栏已经作为真实右侧列显示，但插件内按钮和模块仍然像 popup 一样固定在原位置
+- 分栏宽度和窗口高度变化时，布局只是被压缩，没有真正按侧栏重新排布
+- 当前 mailpane 需要真正的流式侧栏布局，而不是继续在 popup 样式上叠加少量换行规则
+
+### 讨论与决策摘要
+- 根因仍在 `panel.css`：此前只给 mailpane 增加了局部换行，`app-shell`、`top-fixed`、`footer` 仍沿用 popup 的 grid/sticky 关系
+- 选定策略是把 mailpane 定义为流式侧栏布局：顶部控制区自然流动，中间 `groups` 区吃掉剩余高度，底部信息区改为可堆叠尾部
+- 不再改 `TbMailPane` 宿主层，改动边界收敛在 `sidebar/panel.css` 和布局测试
+- 功能范围、按钮顺序、模块顺序保持与 popup 一致，只改变 mailpane 下的响应式排布行为
+
+### 已做改动
+- 版本号升级到 `2.0.11`
+- `sidebar/panel.css`
+  - mailpane 下把 `.app-shell` 改为真正的纵向 `flex` 侧栏骨架
+  - mailpane 下把 `.top-fixed` 改为流式纵向控制区，不再沿用 popup 固定块关系
+  - 顶部按钮区和任务区继续保持原顺序，但按钮采用更流式的 `flex` 尺寸规则
+  - `groups` 区改为明确吃掉剩余高度，并保持主滚动区职责
+  - `footer` 改为纵向堆叠信息区，摆脱 popup 风格的 sticky 尾部假设
+  - 为分组头、条目标题、状态文本等补充 `min-width: 0` 和换行规则，避免窄栏里只压缩不重排
+- `tests/mailpane-layout.test.mjs`
+  - 先新增失败断言，要求 mailpane 必须具备流式侧栏骨架
+  - 再验证 `.app-shell`、`.top-fixed`、`.groups`、`.footer` 的 mailpane 专属 `flex` 关系
+  - 补充校验 mailpane 控件使用流式 `flex` 尺寸，而不是 popup 时代的固定单元格
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.11`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.11.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-dimming.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.10 - 2026-03-08
+
+### 用户问题
+- 第四栏已经作为真实列显示，但面板内部按钮和模块不会随着分栏宽度、窗口高度自动伸缩
+- 顶部按钮区、任务区和底部信息区仍然保留 popup 风格的固定布局
+- 不再需要鼠标移出后降低不透明度，第四栏应始终正常显示
+
+### 讨论与决策摘要
+- 当前问题已经从宿主层转到面板层：`panel.css` 仍按 popup 固定列数布局书写，不适合 mailpane 列宽动态变化
+- 选定策略是保留 popup 的功能结构和按钮顺序，只在 `data-layout="mailpane"` 下启用响应式规则
+- 顶部按钮区和任务区按自动换行处理，`groups` 继续作为主要滚动区，footer 在窄宽和矮高下自然堆叠
+- 透明度行为直接移除，不再保留宿主 dimming 逻辑或相关监听
+
+### 已做改动
+- 版本号升级到 `2.0.10`
+- `sidebar/panel.css`
+  - 为 `mailpane` 模式新增响应式规则：顶部按钮区和任务区改为可换行布局
+  - mailpane 下按钮允许按容器宽度自动折行，不改变顺序
+  - `groups` 区在 mailpane 下明确保持 `min-height: 0`，继续承担主要滚动
+  - `footer` 在 mailpane 下去掉 sticky 依赖，改为更稳定的嵌入式底部区
+  - `status-box` 在 mailpane 下允许换行，避免窄栏中被截断
+  - 为较矮窗口追加轻量间距压缩规则
+- `api/tbMailPane/implementation.js`
+  - 移除宿主 `mouseenter` / `mouseleave` 不透明度监听
+  - 保留宿主始终 `opacity = 1`
+- `tests/mailpane-layout.test.mjs`
+  - 新增对 mailpane 响应式换行、scroll 区和 footer 嵌入规则的断言
+- `tests/mailpane-dimming.test.mjs`
+  - 改为校验宿主永久不透明，不再允许 `0.3` 透明度或相关鼠标监听
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.10`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/sidebar/panel.css`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-layout.test.mjs`
+- `tests/mailpane-dimming.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.10.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-dimming.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-real-column-scope.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.9 - 2026-03-08
+
+### 用户问题
+- 第四栏功能已经显示，但仍然覆盖在邮件正文上，而不是作为真实右侧栏并排布局
+- 面板宽度变化没有驱动主邮件工作区重排
+- 在附加组件管理器、设置页等非主邮件 tab 中也会继续显示第四栏
+
+### 讨论与决策摘要
+- 这三个现象来自同一个结构性根因：Todo 面板宿主仍作为 `position: fixed` 覆盖层挂在窗口根上，而不是 `tabmail` 布局树中的真实列
+- Thunderbird 主窗口的 `tabmail-container` 是更合适的宿主插入点，能让第四栏参与真实横向布局
+- 第四栏显示范围应当由当前 tab 类型控制，而不是仅由 `mail:3pane` 窗口类型控制
+- 选定策略是只在 `mail3PaneTab` 显示，并在其他 tab 中按规则隐藏，而不是报错或销毁状态
+
+### 已做改动
+- 版本号升级到 `2.0.9`
+- `api/tbMailPane/implementation.js`
+  - 新增 `getTabmail()`、`getPaneContainer()`、`isMailThreePaneTabActive()`、`shouldShowPaneInWindow()`，将显示策略绑定到当前 `tabmail` 选中 tab
+  - 宿主插入点从窗口根改为 `tabmail-container`
+  - 移除 host / splitter 的 `position: fixed` 覆盖层定位，改为真实布局子列
+  - 拖拽宽度改为基于宿主容器右边界计算，从而驱动主工作区重排
+  - 新增 `TabSelect` 监听和 tab 容器观察，切换到非 `mail3PaneTab` 时自动隐藏第四栏
+- `tests/mailpane-real-column-scope.test.mjs`
+  - 新增回归测试，覆盖真实列插入点、非 fixed 布局以及 `mail3PaneTab` 可见性范围
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.9`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-real-column-scope.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.9.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-real-column-scope.test.mjs`
+  - `node tests/mailpane-extension-browser.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.8 - 2026-03-08
+
+### 用户问题
+- 第四栏不再停在 `Loading Todo Sidebar...`，但仍然退化为 `Todo Sidebar failed to load.`
+- 点击 `Retry` 后依旧失败，错误控制台不再出现 `URL is not defined`
+- 控制台中剩余的主要输出只有 `calendarsRead/calendarsWrite` 权限 warning，需要区分其与当前装载失败是否存在直接因果关系
+
+### 讨论与决策摘要
+- `URL is not defined` 已经被修掉，因此当前故障点前移到了“扩展页承载 browser 是否具备正确的 WebExtension 宿主配置”
+- 对照 Mozilla/Thunderbird 自身的扩展页承载方式，当前 mailpane 宿主缺少 `messagemanagergroup=webext-browsers`、`manualactiveness`、`nodefaultsrc`、`webextension-view-type` 等关键属性
+- remote 扩展页在 frame loader 建立前就导航会产生不稳定行为，因此需要等待 `XULFrameLoaderCreated` 后再设置 `src`
+- 本次仍然只修这一条装载链根因，不混入权限 warning 的单独治理
+
+### 已做改动
+- 版本号升级到 `2.0.8`
+- `api/tbMailPane/implementation.js`
+  - 为 mailpane 宿主内的 `browser` 补齐 WebExtension 承载属性：`messagemanagergroup`、`manualactiveness`、`nodefaultsrc`、`webextension-view-type`
+  - 在可用时透传扩展运行时的 `remote`、`remoteType`、`browsingContextGroupId`
+  - 新增 frame loader 就绪等待逻辑；remote 模式下在 `XULFrameLoaderCreated` 之后再导航到 `sidebar/panel.html`
+  - `beginPanelLoad()` 改为先等 frame loader promise，再真正赋值 `src`
+- `tests/mailpane-extension-browser.test.mjs`
+  - 新增回归测试，覆盖 mailpane 扩展页宿主 `browser` 的关键属性与 frame loader 等待逻辑
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.8`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-extension-browser.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.8.xpi`
+
+### 验证结果
+- 回归测试通过：
+  - `node tests/mailpane-extension-browser.test.mjs`
+  - `node tests/mailpane-fallback.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.7 - 2026-03-08
+
+### 用户问题
+- 第四栏仍停留在 `Loading Todo Sidebar...`
+- 点击 `Retry` 后，错误控制台报出 `ReferenceError: URL is not defined`
+- 需要确认这是否才是第四栏功能页未真正装载的直接根因
+
+### 讨论与决策摘要
+- 错误控制台已经给出明确根因：`TbMailPane` parent experiment 里调用了全局 `URL`
+- 在 Thunderbird experiment parent 环境中，这个全局不可用，因此 `buildPanelSrc()` 在装载面板前就抛异常
+- `calendarsRead/calendarsWrite` 的 manifest warning 不是这次第四栏白屏/卡 loading 的直接根因
+- 本次只修这个确定根因，不混入其他权限体系调整
+
+### 已做改动
+- 版本号升级到 `2.0.7`
+- `api/tbMailPane/implementation.js`
+  - 将 `buildPanelSrc()` 从 `new URL(...)` 改为父进程安全的字符串拼接
+  - 保留 `layout=mailpane` 和 `mailpaneToken` 传参，但不再依赖全局 `URL` 构造器
+- `tests/mailpane-fallback.test.mjs`
+  - 新增断言：mailpane parent implementation 不得依赖 `new URL(...)`
+  - 同步更新对 `mailpaneToken` 传参方式的覆盖
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.7`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-fallback.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.7.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.6 - 2026-03-08
+
+### 用户问题
+- 第四栏虽然已经出现，但其中完全空白，没有呈现 popup 原本的功能本体。
+- 需求不是做新的控制面板，而是把 popup 中已有的完整交互功能放进第四栏。
+- 如果第四栏内容加载失败，不能继续保持空白。
+
+### 讨论与决策摘要
+- 第四栏继续作为唯一主入口，但只作为宿主层，不重写业务面板。
+- popup 的 `panel.html/panel.js` 继续作为唯一功能本体，尽量保持原有结构和交互顺序。
+- 只允许做最少的 mailpane 布局适配，不扩展业务范围。
+- 内容装载失败时，第四栏内部显示内嵌 fallback，而不是纯空白或只弹外部告警。
+
+### 已做改动
+- 版本号升级到 `2.0.6`。
+- `api/tbMailPane/schema.json`
+  - 新增 `markPanelReady(token)` 和 `markPanelLoadFailed(token, reason)`，用于宿主和嵌入面板之间的 ready/failure 握手。
+- `api/tbMailPane/implementation.js`
+  - 为第四栏宿主新增 `loading / ready / error` 三态。
+  - 新增内嵌 overlay、提示文案和重试按钮，避免出现空白第四栏。
+  - 以 `mailpaneToken` 追踪每次嵌入面板加载，并等待面板 ready 信号或超时进入 error。
+  - `getState()` 现在返回 `contentReady` 与 `loadState`，供打开流程判断“功能本体是否真的呈现”。
+  - 为嵌入 `browser` 明确补足 `height: 100%`，减小宿主显示但内容区不渲染的风险。
+- `sidebar/panel.js`
+  - 读取 `mailpaneToken`。
+  - 在 mailpane 模式下，当主面板壳体初始化完成后主动上报 ready。
+  - 如果脚本在 ready 前发生致命错误，则主动上报 load failure。
+- `sidebar/panel.css`
+  - mailpane 模式下明确使用 `width: 100%`，让 popup 功能页完整铺满第四栏宿主。
+- `background.js`
+  - 打开逻辑现在要求第四栏至少达到“内容 ready”或“宿主内 error fallback”之一，不再把“空白但可见”视为成功。
+- 测试
+  - 新增 `tests/mailpane-fallback.test.mjs`
+  - 更新 mailpane open flow / layout 测试，覆盖 ready token、宿主 fallback 和 content readiness 判定
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/mailpane-fallback.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.6.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.5 - 2026-03-08
+
+### 用户问题
+- 点击插件按钮后，第四栏没有显示出来。
+- Thunderbird 错误控制台提示“解析 `display` 的值时出错。声明被丢弃”。
+- 第四栏打开失败时，不应静默回退到 tab，而应直接给出原生告警。
+
+### 讨论与决策摘要
+- 本次按“最小修复”处理，只修宿主显示机制和失败诊断，不扩展为更大范围重构。
+- 按用户确认，按钮点击失败时只弹简短原生告警，不显示底层异常细节。
+- 按用户确认，第四栏成功标准只看“宿主容器已插入且可见”；未可见即硬失败。
+- 主仓库 `dist/` 已存在非本次生成的 `2.0.4` 包，因此版本直接升级为 `2.0.5`，避免覆盖未知产物。
+
+### 已做改动
+- 版本号升级到 `2.0.5`。
+- `background.js`
+  - 移除 `tabs.create(...)` 回退，避免掩盖第四栏注入失败。
+  - 打开逻辑统一改为显式 `show()`，不再对工具栏按钮执行 toggle-hide。
+  - 在调用 `TbMailPane.show()` 后追加 `getState()` 可见性校验；宿主未真正显示时直接判定失败。
+  - 新增“第四栏打开失败”的原生告警调用。
+- `api/tbMailPane/schema.json`
+  - 新增 `showFailureAlert(message)` experiment 接口。
+- `api/tbMailPane/implementation.js`
+  - 宿主显隐从无效的 `display: -moz-box` 切换为 `hidden` 状态控制。
+  - 新增真实可见性检查，基于宿主是否连接、是否隐藏、计算样式和几何尺寸综合判定。
+  - `show()` / `toggle()` 在要求显示时会等待宿主进入可见状态，否则抛出失败。
+  - 新增基于 Thunderbird 原生 prompt 的失败告警桥接。
+- `tests/mailpane-open-flow.test.mjs`
+  - 新增对“无 tab 回退”“show 后硬校验可见性”“原生告警接口”“不再使用 `-moz-box`”的覆盖。
+- `README.md` / `README.en.md`
+  - 更新当前包版本和下载链接到 `v2.0.5`。
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### Commit 列表
+- 待本次修复提交后补充
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.5.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
+## v2.0.3 - 2026-03-08
+
+### 用户问题
+- 不应覆盖 `v2.0.2` 的 XPI 产物。
+- 插件主界面需要从 popup 迁移为 Thunderbird 邮件页右侧第四栏。
+- 第四栏移出鼠标后降到 30% 透明度。
+- LLM 测试连接超时需要缩短到 5 秒。
+
+### 讨论与决策摘要
+- 采用现有 `TbMailPane` experiment 作为第四栏宿主，而不是继续以 popup 作为主入口。
+- 版本号升级到 `2.0.3`，避免覆盖 `v2.0.2` 产物。
+- README 改为描述 mailpane-first 交互，并同步当前包名与版本号。
+
+### 已做改动
+- 版本号升级到 `2.0.3`。
+- `manifest.json`
+  - 注册 `TbMailPane` experiment。
+  - 移除 `browser_action` / `message_display_action` 的 `default_popup`。
+- `background.js`
+  - 主界面打开逻辑改为优先调用 `TbMailPane.show()` / `toggle()`。
+  - 启动时默认请求显示第四栏。
+  - 保留 `tabs.create(...)` 作为回退入口。
+- `api/tbMailPane/implementation.js`
+  - 启用常驻右侧第四栏宿主。
+  - 支持拖拽分隔条调整宽度并持久化。
+  - 新增鼠标移出宿主后降到 `0.3` 透明度，移回恢复 `1.0`。
+- `sidebar/panel.js` / `sidebar/panel.css`
+  - 新增 `layout=mailpane` 布局模式。
+  - 在第四栏宿主内移除 popup 的最小宽高限制，按嵌入式面板铺满高度。
+- `options/options.js`
+  - 连接测试超时由 `8000ms` 调整为 `5000ms`。
+- `README.md` / `README.en.md`
+  - 更新为第四栏常驻交互说明。
+  - 当前包示例和文档版本更新为 `v2.0.3`。
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `thunderbird-addon/options/options.js`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+- `tests/mailpane-mode.test.mjs`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/mailpane-dimming.test.mjs`
+- `tests/mailpane-default-visible.test.mjs`
+- `tests/readme-mailpane-mode.test.mjs`
+- `tests/release-version.test.mjs`
+- `tests/options-provider-presets.test.mjs`
+
+### Commit 列表
+- `8ebb78f` test: switch manifest coverage to mailpane mode
+- `afce7f2` feat: open todo ui through mail pane host
+- `a6e2897` feat: support embedded mailpane panel layout
+- `786c4ba` feat: dim mail pane host on pointer leave
+- `007cab4` feat: shorten llm connection timeout
+- `570c93d` docs: describe mailpane-first thunderbird ui
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.3.xpi`
+
+### 验证结果
+- 测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
 
 ## v2.0.2 - 2026-02-27
 

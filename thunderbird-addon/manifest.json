@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Unread2Calendar Todo Sidebar",
-  "version": "2.0.2",
+  "version": "2.0.19",
   "description": "Scan unread emails, extract todo candidates, review and import to calendar.",
   "browser_specific_settings": {
     "gecko": {
@@ -46,15 +46,27 @@
         ],
         "script": "api/tbCalendarAccess/implementation.js"
       }
+    },
+    "TbMailPane": {
+      "schema": "api/tbMailPane/schema.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "paths": [
+          [
+            "TbMailPane"
+          ]
+        ],
+        "script": "api/tbMailPane/implementation.js"
+      }
     }
   },
   "browser_action": {
-    "default_title": "Todo Sidebar",
-    "default_popup": "sidebar/panel.html"
+    "default_title": "Todo Sidebar"
   },
   "message_display_action": {
-    "default_title": "Todo Sidebar",
-    "default_popup": "sidebar/panel.html"
+    "default_title": "Todo Sidebar"
   },
   "options_ui": {
     "page": "options/options.html",

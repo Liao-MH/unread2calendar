@@ -1,6 +1,12 @@
 'use strict';
 
+const layoutParams = new URLSearchParams(window.location.search);
+const layoutMode = layoutParams.get('layout') === 'mailpane' ? 'mailpane' : 'popup';
+const mailPaneToken = layoutParams.get('mailpaneToken');
+document.body.dataset.layout = layoutMode;
+
 const el = {
+  appShell: document.querySelector('.app-shell'),
   scanBtn: document.getElementById('scanBtn'),
   refreshBtn: document.getElementById('refreshBtn'),
   expandAllBtn: document.getElementById('expandAllBtn'),
@@ -28,6 +34,7 @@ const el = {
   importedHost: document.getElementById('importedHost'),
   statusBox: document.getElementById('statusBox'),
   versionLine: document.getElementById('versionLine'),
+  toolbarGroups: Array.from(document.querySelectorAll('.toolbar-group')),
   groupTpl: document.getElementById('groupTpl'),
   itemTpl: document.getElementById('itemTpl')
 };
@@ -142,6 +149,10 @@ const I18N = {
 };
 
 let vm = null;
+let mailPaneReadySent = false;
+let mailPaneFailureSent = false;
+let mailPaneLayoutSyncScheduled = false;
+let mailPaneResizeObserver = null;
 const PANEL_UI_STATE_KEY = 'todo.panel-ui-state.v1';
 const PANEL_WINDOW_STATE_KEY = 'todo.panel-window-state.v1';
 const PANEL_MIN_WIDTH = 560;
@@ -439,6 +450,78 @@ function applyStaticText() {
   el.confirmImportBtn.textContent = t('confirmImport');
   el.cancelScanBtn.textContent = t('cancel');
   el.cancelImportBtn.textContent = t('cancel');
+}
+
+function isToolbarGroupWrapped(group) {
+  if (!group) return false;
+  const buttons = Array.from(group.querySelectorAll('button'));
+  if (buttons.length < 2) return false;
+  const firstTop = buttons[0].offsetTop;
+  return buttons.some((button) => Math.abs(button.offsetTop - firstTop) > 1);
+}
+
+function syncMailpaneToolbarLayout() {
+  mailPaneLayoutSyncScheduled = false;
+  if (layoutMode !== 'mailpane') return;
+  for (const group of el.toolbarGroups) {
+    const wrapped = isToolbarGroupWrapped(group);
+    group.classList.toggle('toolbar-group--wrapped', wrapped);
+    group.classList.toggle('toolbar-group--single', !wrapped);
+  }
+}
+
+function scheduleMailpaneLayoutSync() {
+  if (layoutMode !== 'mailpane' || mailPaneLayoutSyncScheduled) return;
+  mailPaneLayoutSyncScheduled = true;
+  const run = () => syncMailpaneToolbarLayout();
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(run);
+  } else {
+    setTimeout(run, 0);
+  }
+}
+
+function disconnectMailpaneResizeObserver() {
+  if (!mailPaneResizeObserver) return;
+  try {
+    mailPaneResizeObserver.disconnect();
+  } catch (_) {
+    // Ignore cleanup failures.
+  }
+  mailPaneResizeObserver = null;
+}
+
+function connectMailpaneResizeObserver() {
+  if (layoutMode !== 'mailpane' || typeof ResizeObserver !== 'function') return;
+  disconnectMailpaneResizeObserver();
+  const target = el.appShell || document.body;
+  if (!target) return;
+  mailPaneResizeObserver = new ResizeObserver(() => {
+    scheduleMailpaneLayoutSync();
+  });
+  mailPaneResizeObserver.observe(target);
+}
+
+async function markMailPaneReady() {
+  if (layoutMode !== 'mailpane' || !mailPaneToken || mailPaneReadySent) return;
+  if (!(browser.TbMailPane && typeof browser.TbMailPane.markPanelReady === 'function')) return;
+  mailPaneReadySent = true;
+  try {
+    await browser.TbMailPane.markPanelReady(mailPaneToken);
+  } catch (_) {
+    mailPaneReadySent = false;
+  }
+}
+
+async function markMailPaneLoadFailed(reason) {
+  if (layoutMode !== 'mailpane' || !mailPaneToken || mailPaneReadySent || mailPaneFailureSent) return;
+  if (!(browser.TbMailPane && typeof browser.TbMailPane.markPanelLoadFailed === 'function')) return;
+  mailPaneFailureSent = true;
+  try {
+    await browser.TbMailPane.markPanelLoadFailed(mailPaneToken, String(reason || 'Panel initialization failed.'));
+  } catch (_) {
+    mailPaneFailureSent = false;
+  }
 }
 
 function actionError(action, error) {
@@ -1088,6 +1171,7 @@ function render() {
   } else {
     applyScrollTop(prevScrollTop);
   }
+  scheduleMailpaneLayoutSync();
 }
 
 async function refresh() {
@@ -1291,11 +1375,13 @@ async function openLLM() {
 
 window.onerror = function(message) {
   setStatusLine(`Panel failed: ${message}`);
+  void markMailPaneLoadFailed(message);
 };
 
 window.onunhandledrejection = function(event) {
   const reason = event.reason && event.reason.message ? event.reason.message : String(event.reason || 'unknown');
   setStatusLine(`Panel failed: ${reason}`);
+  void markMailPaneLoadFailed(reason);
 };
 
 browser.runtime.onMessage.addListener((message) => {
@@ -1322,7 +1408,18 @@ el.groups.addEventListener('scroll', () => {
   saveUiState();
 });
 window.addEventListener('beforeunload', saveUiState);
+window.addEventListener('resize', scheduleMailpaneLayoutSync);
+window.addEventListener('beforeunload', disconnectMailpaneResizeObserver);
 
 applyStaticText();
 loadUiState();
+connectMailpaneResizeObserver();
+scheduleMailpaneLayoutSync();
+if (layoutMode === 'mailpane' && typeof window.requestAnimationFrame === 'function') {
+  window.requestAnimationFrame(() => {
+    void markMailPaneReady();
+  });
+} else {
+  void markMailPaneReady();
+}
 refresh().catch((error) => actionError(t('loadFailed'), error));

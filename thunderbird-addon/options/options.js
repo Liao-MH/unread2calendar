@@ -295,7 +295,7 @@ async function fetchRemoteModelsForProvider(provider, key) {
     let lastError = null;
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
-      const timeoutId = controller ? setTimeout(() => controller.abort(), 8000) : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 5000) : null;
       try {
         const resp = await fetch(url, {
           method: 'GET',
@@ -1430,10 +1430,10 @@ async function saveLLMSection() {
     const saved = await browser.runtime.sendMessage({
       type: 'todo:set-settings',
       settings: {
-        ...collectLLMSettingsPayload(),
         ...collectPromptSettingsPayload(),
         ...collectGroupsPayload(),
-        ...collectProcessingPayload()
+        ...collectProcessingPayload(),
+        ...collectLLMSettingsPayload()
       }
     });
     state.settings = { ...saved };

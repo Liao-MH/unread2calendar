@@ -552,6 +552,16 @@ function formatErrorDetail(error) {
   return parts.join('\n');
 }
 
+async function showTodoPaneOpenFailureAlert() {
+  try {
+    if (browser.TbMailPane && typeof browser.TbMailPane.showFailureAlert === 'function') {
+      await browser.TbMailPane.showFailureAlert(/^zh\b/.test(uiLangTag()) ? '第四栏打开失败' : 'Failed to open the Todo Sidebar pane');
+    }
+  } catch (_) {
+    // Best effort.
+  }
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, Math.max(0, Number(ms) || 0)));
 }
@@ -2991,27 +3001,24 @@ function setupContextMenus() {
 
 async function openTodoWindowInCurrentContext(tab, toggle) {
   const errors = [];
+  void tab;
   void toggle;
-  const windowId = tab && Number.isInteger(tab.windowId) ? tab.windowId : undefined;
 
   try {
-    if (browser.browserAction && typeof browser.browserAction.openPopup === 'function') {
-      await browser.browserAction.openPopup();
-      return;
+    if (browser.TbMailPane) {
+      if (typeof browser.TbMailPane.show === 'function') {
+        await browser.TbMailPane.show();
+        const paneState = await browser.TbMailPane.getState();
+        if (!paneState.visible || (!paneState.contentReady && paneState.loadState !== 'error')) {
+          const err = new Error('Mail pane did not reach a visible ready/error state after show().');
+          err.code = 'MAILPANE_NOT_VISIBLE';
+          throw err;
+        }
+        return;
+      }
     }
   } catch (error) {
-    errors.push(`browserAction.openPopup: ${formatErrorDetail(error)}`);
-  }
-
-  try {
-    await browser.tabs.create({
-      url: browser.runtime.getURL('sidebar/panel.html'),
-      active: true,
-      ...(windowId ? { windowId } : {})
-    });
-    return;
-  } catch (error) {
-    errors.push(`tabs.create: ${formatErrorDetail(error)}`);
+    errors.push(`TbMailPane: ${formatErrorDetail(error)}`);
   }
 
   const err = new Error(`All UI open methods failed.\n${errors.join('\n\n')}`);
@@ -3019,11 +3026,21 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
   throw err;
 }
 
+async function ensureDefaultMailPaneVisible() {
+  try {
+    if (browser.TbMailPane && typeof browser.TbMailPane.show === 'function') {
+      await browser.TbMailPane.show();
+    }
+  } catch (_) {
+    // Mail windows may not exist yet during startup.
+  }
+}
+
 browser.menus.onClicked.addListener(async (info, tab) => {
   if (!info) return;
   if (info.menuItemId === MENU_OPEN_FROM_ACTION) {
     try {
-      await openTodoWindowInCurrentContext(tab, true);
+      await openTodoWindowInCurrentContext(tab, false);
     } catch (error) {
       setError('Open from action menu', error);
       await broadcastStateChanged();
@@ -3059,16 +3076,18 @@ browser.menus.onClicked.addListener(async (info, tab) => {
 if (browser.runtime && browser.runtime.onInstalled) {
   browser.runtime.onInstalled.addListener(() => {
     setupContextMenus();
+    void ensureDefaultMailPaneVisible();
   });
 }
 setupContextMenus();
+void ensureDefaultMailPaneVisible();
 
 if (browser.browserAction && browser.browserAction.onClicked) {
   browser.browserAction.onClicked.addListener(async (tab) => {
     try {
-      await openTodoWindowInCurrentContext(tab, true);
+      await openTodoWindowInCurrentContext(tab, false);
     } catch (error) {
-      setError('Toggle pane', error);
+      setError('Open pane', error);
       await broadcastStateChanged();
     }
   });
@@ -3077,9 +3096,9 @@ if (browser.browserAction && browser.browserAction.onClicked) {
 if (browser.messageDisplayAction && browser.messageDisplayAction.onClicked) {
   browser.messageDisplayAction.onClicked.addListener(async (tab) => {
     try {
-      await openTodoWindowInCurrentContext(tab, true);
+      await openTodoWindowInCurrentContext(tab, false);
     } catch (error) {
-      setError('Toggle pane', error);
+      setError('Open pane', error);
       await broadcastStateChanged();
     }
   });

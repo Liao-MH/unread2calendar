@@ -25,6 +25,43 @@
         "type": "function",
         "parameters": [],
         "async": true
+      },
+      {
+        "name": "showFailureAlert",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "markPanelReady",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "token",
+            "type": "string"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "markPanelLoadFailed",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "token",
+            "type": "string"
+          },
+          {
+            "name": "reason",
+            "type": "string"
+          }
+        ],
+        "async": true
       }
     ]
   }
