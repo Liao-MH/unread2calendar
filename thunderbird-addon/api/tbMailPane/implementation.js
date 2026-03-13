@@ -595,13 +595,14 @@
               loadState: paneState.loadState
             };
           },
-          async refreshLayout() {
+          async reloadPanel() {
             const win = getCurrentMailWindow();
             if (!win) fail("No mail:3pane window available");
             const paneState = ensurePaneForWindow(win);
-            applyPaneGeometry(win, paneState);
-            await nextFrame(win);
-            applyPaneGeometry(win, paneState);
+            const visible = await verifyPaneVisible(win, paneState);
+            if (!visible) fail("Mail pane host is still not visible before reloadPanel()");
+            beginPanelLoad(win, paneState, { force: true });
+            await waitForPanelOutcome(win, paneState);
             return true;
           },
           async showFailureAlert(message) {

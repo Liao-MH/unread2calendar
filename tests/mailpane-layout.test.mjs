@@ -17,8 +17,7 @@ assert.match(panelHtml, /class="taskbar toolbar-group toolbar-group-task"/, 'tas
 assert.match(panelJs, /function isToolbarGroupWrapped\(group\)/, 'panel should detect whether a toolbar group has wrapped');
 assert.match(panelJs, /group\.classList\.toggle\('toolbar-group--wrapped'/, 'panel should mark wrapped toolbar groups explicitly');
 assert.match(panelJs, /group\.classList\.toggle\('toolbar-group--single'/, 'panel should mark single-line toolbar groups explicitly');
-assert.match(panelJs, /message && message\.type === 'todo:force-layout-sync'/, 'panel should accept an explicit layout refresh message');
-assert.match(panelJs, /scheduleMailpaneLayoutSync\(\)/, 'panel should route explicit refresh messages through the existing layout sync entry point');
+assert.doesNotMatch(panelJs, /message && message\.type === 'todo:force-layout-sync'/, 'panel should not keep the old explicit layout refresh message path');
 assert.doesNotMatch(panelJs, /new ResizeObserver\(/, 'panel should no longer rely on a ResizeObserver for this refresh path');
 assert.doesNotMatch(panelJs, /function connectMailpaneResizeObserver\(\)/, 'panel should not keep dedicated ResizeObserver wiring once explicit refresh is available');
 assert.match(panelJs, /window\.addEventListener\('resize', scheduleMailpaneLayoutSync\)/, 'panel should resync toolbar layout on resize');

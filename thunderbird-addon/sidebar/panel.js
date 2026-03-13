@@ -1365,10 +1365,6 @@ window.onunhandledrejection = function(event) {
 browser.runtime.onMessage.addListener((message) => {
   if (message && message.type === 'todo:state-changed') {
     refresh();
-    return;
-  }
-  if (message && message.type === 'todo:force-layout-sync') {
-    scheduleMailpaneLayoutSync();
   }
 });
 

@@ -27,7 +27,7 @@
         "async": true
       },
       {
-        "name": "refreshLayout",
+        "name": "reloadPanel",
         "type": "function",
         "parameters": [],
         "async": true

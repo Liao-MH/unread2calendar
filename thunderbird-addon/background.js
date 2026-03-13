@@ -3006,21 +3006,10 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
 
   try {
     if (browser.TbMailPane) {
-      const beforeState = typeof browser.TbMailPane.getState === 'function'
-        ? await browser.TbMailPane.getState()
-        : null;
-      const wasVisible = !!(beforeState && beforeState.visible);
       if (typeof browser.TbMailPane.show === 'function') {
         await browser.TbMailPane.show();
-        if (wasVisible) {
-          if (typeof browser.TbMailPane.refreshLayout === 'function') {
-            await browser.TbMailPane.refreshLayout();
-          }
-          try {
-            await browser.runtime.sendMessage({ type: 'todo:force-layout-sync' });
-          } catch (_) {
-            // Best effort. The panel may not be ready to receive the signal yet.
-          }
+        if (typeof browser.TbMailPane.reloadPanel === 'function') {
+          await browser.TbMailPane.reloadPanel();
         }
         const paneState = await browser.TbMailPane.getState();
         if (!paneState.visible || (!paneState.contentReady && paneState.loadState !== 'error')) {

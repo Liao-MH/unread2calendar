@@ -1,5 +1,72 @@
 # Changelog
 
+## v2.0.21 - 2026-03-13
+
+### 用户问题
+- 用户明确要求放弃“点击按钮时只刷新布局”的方案
+- 新需求是：每次点击插件按钮，都直接重载第四栏里的整个插件面板
+- 用户进一步明确，这个目标不只是为了解决宽度适配，还要同时解决高度变化后的重新布局问题
+
+### 讨论与决策摘要
+- 根因没有变化：拖动分栏或改变可用高度后，页面继续停留在旧布局
+- 用户已经确认“整页重载插件面板”是更符合预期的恢复方式
+- 决策从“局部刷新布局”切换为“整页重载面板”：
+  - 按钮点击时先确保 mailpane 宿主可见
+  - 然后强制重载嵌入的 `panel.html`
+  - 重载后的页面按当前第四栏的实际宽度和高度重新初始化布局
+- 因为 recovery 路径已改为整页重载，旧的 `todo:force-layout-sync` 和 `refreshLayout()` 专用路径不再保留
+
+### 已做改动
+- 版本号升级到 `2.0.21`
+- `thunderbird-addon/background.js`
+  - 将按钮点击后的 mailpane 行为改为 `reloadPanel()`
+  - 删除上一版“只刷新布局不重载”的专用调用路径
+- `thunderbird-addon/api/tbMailPane/schema.json`
+  - 将 experiment API 从 `refreshLayout()` 调整为 `reloadPanel()`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+  - 新增 `reloadPanel()`，通过 `beginPanelLoad(..., { force: true })` 强制重载嵌入面板
+  - 等待新的 panel load 结果，而不是只做宿主几何重算
+- `thunderbird-addon/sidebar/panel.js`
+  - 删除 `todo:force-layout-sync` 消息分支
+- `tests/decision-and-mail-open-policy.test.mjs`
+  - 更新为要求按钮点击走 `reloadPanel()`
+- `tests/mailpane-open-flow.test.mjs`
+  - 更新为要求 `reloadPanel()` API 暴露与实现
+- `tests/mailpane-layout.test.mjs`
+  - 更新为不再允许旧的 `todo:force-layout-sync` 路径残留
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v2.0.21`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.21`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `tests/decision-and-mail-open-policy.test.mjs`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.21.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/decision-and-mail-open-policy.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.20 - 2026-03-13
 
 ### 用户问题

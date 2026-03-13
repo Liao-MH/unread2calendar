@@ -29,18 +29,13 @@ assert.match(
 );
 assert.match(
   backgroundJs,
-  /const wasVisible = !!\(beforeState && beforeState\.visible\)/,
-  'repeated button clicks should detect whether the mailpane was already visible before show()'
+  /await browser\.TbMailPane\.reloadPanel\(\)/,
+  'button clicks should reload the embedded mailpane panel'
 );
-assert.match(
+assert.doesNotMatch(
   backgroundJs,
   /await browser\.TbMailPane\.refreshLayout\(\)/,
-  'repeated clicks on an already-visible pane should trigger explicit host layout refresh'
-);
-assert.match(
-  backgroundJs,
-  /await browser\.runtime\.sendMessage\(\{\s*type:\s*['"]todo:force-layout-sync['"]/,
-  'repeated clicks on an already-visible pane should notify the embedded panel to resync layout'
+  'button reload flow should not use the old in-place layout refresh path'
 );
 
 console.log('decision and mail-open policy tests passed');
