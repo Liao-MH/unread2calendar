@@ -53,7 +53,7 @@ body[data-layout="mailpane"] {
   max-width: none;
   min-height: 0;
   height: 100%;
-  --e2c-mailpane-control-gap: clamp(3px, 0.8vw, 10px);
+  --e2c-mailpane-control-gap: clamp(2px, 0.6vw, 8px);
   --e2c-mailpane-toolbar-row-gap: clamp(4px, 0.8vh, 7px);
   --e2c-mailpane-toolbar-group-gap: clamp(8px, 1.5vh, 12px);
   --e2c-mailpane-stack-gap: clamp(6px, 1.2vh, 10px);
@@ -108,7 +108,7 @@ body[data-layout="mailpane"] .toolbar-group > button {
   min-width: 0;
   max-width: 100%;
   white-space: nowrap;
-  padding-inline: 1ch;
+  padding-inline: clamp(0.55ch, 0.75vw, 0.85ch);
 }
 
 body[data-layout="mailpane"] .toolbar-group-primary > button {

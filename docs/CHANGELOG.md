@@ -1,5 +1,59 @@
 # Changelog
 
+## v2.0.23 - 2026-03-13
+
+### 用户问题
+- 用户确认“点击按钮重建整个第四栏宿主”的功能已经达到预期
+- 新问题是第四栏存在过高的最小宽度限制，拖窄到一定程度后就不能继续变窄
+- 用户希望至少能缩窄到顶部按钮总共显示为三行，也就是让当前第一行主按钮组发生换行
+
+### 讨论与决策摘要
+- 根因不是单一问题，而是宿主层和面板层叠加限制：
+  - `tbMailPane` 宿主把最小宽度硬性钳制在 `360px`
+  - `mailpane` 模式下顶部按钮仍保留偏宽的横向间距和内边距
+- 这次不追求“无限缩窄”，只把最小宽度放宽到能让顶部主按钮组开始换行
+- 决策是同时做两层最小改动：
+  - 下调宿主最小宽度到 `300px`
+  - 只在 `mailpane` 模式下压缩按钮横向间距和按钮左右内边距
+
+### 已做改动
+- 版本号升级到 `2.0.23`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+  - 将第四栏宿主最小宽度从 `360px` 下调到 `300px`
+  - 保持所有宽度保存、恢复、拖拽钳制逻辑与新的最小宽度一致
+- `thunderbird-addon/sidebar/panel.css`
+  - 将 `mailpane` 模式下的顶部按钮横向间距调小
+  - 将 `mailpane` 模式下按钮的 `padding-inline` 收紧，便于主按钮组更早换行
+- `tests/mailpane-layout.test.mjs`
+  - 新增针对 `300px` 最小宽度和更紧凑按钮样式的回归断言
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v2.0.23`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.23`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.23.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.22 - 2026-03-13
 
 ### 用户问题
