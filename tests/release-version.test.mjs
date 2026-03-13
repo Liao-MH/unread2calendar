@@ -7,11 +7,11 @@ const readmeZh = fs.readFileSync(path.resolve('README.md'), 'utf8');
 const readmeEn = fs.readFileSync(path.resolve('README.en.md'), 'utf8');
 const changelog = fs.readFileSync(path.resolve('docs/CHANGELOG.md'), 'utf8');
 
-assert.equal(manifest.version, '2.0.24', 'manifest version should be bumped to 2.0.24');
-assert.match(readmeZh, /unread2calendar-thunderbird-2\.0\.24\.xpi/, 'Chinese README should reference the 2.0.24 package');
-assert.match(readmeEn, /unread2calendar-thunderbird-2\.0\.24\.xpi/, 'English README should reference the 2.0.24 package');
-assert.match(readmeZh, /当前文档对应插件版本：`v2\.0\.24`/, 'Chinese README should target v2.0.24');
-assert.match(readmeEn, /This README targets add-on version: `v2\.0\.24`/, 'English README should target v2.0.24');
-assert.match(changelog, /^## v2\.0\.24 - 2026-03-13/m, 'CHANGELOG should contain a top-level v2.0.24 entry');
+assert.equal(manifest.version, '3.0.0', 'manifest version should be bumped to 3.0.0');
+assert.match(readmeZh, /unread2calendar-thunderbird-3\.0\.0\.xpi/, 'Chinese README should reference the 3.0.0 package');
+assert.match(readmeEn, /unread2calendar-thunderbird-3\.0\.0\.xpi/, 'English README should reference the 3.0.0 package');
+assert.match(readmeZh, /当前文档对应插件版本：`v3\.0\.0`/, 'Chinese README should target v3.0.0');
+assert.match(readmeEn, /This README targets add-on version: `v3\.0\.0`/, 'English README should target v3.0.0');
+assert.match(changelog, /^## v3\.0\.0 - 2026-03-13/m, 'CHANGELOG should contain a top-level v3.0.0 entry');
 
 console.log('release version tests passed');

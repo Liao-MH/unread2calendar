@@ -1,5 +1,46 @@
 # Changelog
 
+## v3.0.0 - 2026-03-13
+
+### 版本定位
+- 用户确认当前 Thunderbird 插件主线功能已经达到可正式定版的状态
+- 本次不是引入新的交互方向，而是将当前稳定基线从 `2.0.24` 正式提升为 `3.0.0`
+- `3.0.0` 作为当前 Thunderbird add-on 的正式发布版本，用于后续 GitHub 发布与下载分发
+
+### 纳入 3.0.0 的当前稳定能力
+- 点击工具栏按钮时，第四栏宿主会重建，从而更接近“停用再启用附加组件”的恢复效果
+- 第四栏最小宽度已放宽到 `100px`，允许极窄状态下继续拖窄
+- mailpane 顶部按钮保持正常横向 gap，按钮自身使用 `0.5em` 左右留白
+- 当前 mailpane 布局、按钮重建行为和发布测试基线均已完成回归验证
+
+### 已做改动
+- 版本号升级到 `3.0.0`
+- `thunderbird-addon/manifest.json`
+  - 扩展版本从 `2.0.24` 升级到 `3.0.0`
+- `README.md` / `README.en.md`
+  - 下载包名和 GitHub release 下载地址更新为 `v3.0.0`
+  - 当前文档对应版本更新为 `v3.0.0`
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.0`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `tests/release-version.test.mjs`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.0.xpi`
+
+### 验证结果
+- 关键版本测试通过：
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.24 - 2026-03-13
 
 ### 用户问题
