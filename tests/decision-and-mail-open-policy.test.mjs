@@ -27,5 +27,20 @@ assert.match(
   /isStickyConflict/,
   'merge flow should block incoming scan updates from overwriting locked decisions'
 );
+assert.match(
+  backgroundJs,
+  /const wasVisible = !!\(beforeState && beforeState\.visible\)/,
+  'repeated button clicks should detect whether the mailpane was already visible before show()'
+);
+assert.match(
+  backgroundJs,
+  /await browser\.TbMailPane\.refreshLayout\(\)/,
+  'repeated clicks on an already-visible pane should trigger explicit host layout refresh'
+);
+assert.match(
+  backgroundJs,
+  /await browser\.runtime\.sendMessage\(\{\s*type:\s*['"]todo:force-layout-sync['"]/,
+  'repeated clicks on an already-visible pane should notify the embedded panel to resync layout'
+);
 
 console.log('decision and mail-open policy tests passed');

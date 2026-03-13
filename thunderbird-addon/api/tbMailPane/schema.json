@@ -27,6 +27,12 @@
         "async": true
       },
       {
+        "name": "refreshLayout",
+        "type": "function",
+        "parameters": [],
+        "async": true
+      },
+      {
         "name": "showFailureAlert",
         "type": "function",
         "parameters": [

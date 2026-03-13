@@ -16,6 +16,7 @@ assert.match(background, /openTodoWindowInCurrentContext\(tab,\s*false\)/, 'tool
 assert.match(background, /if\s*\(!paneState\.visible\s*\|\|\s*\(!paneState\.contentReady\s*&&\s*paneState\.loadState\s*!==\s*['"]error['"]\)\)/, 'open helper should wait for either ready content or an in-pane error state');
 assert.equal(schema[0]?.functions?.some((entry) => entry.name === 'markPanelReady'), true, 'TbMailPane should expose a panel ready bridge');
 assert.equal(schema[0]?.functions?.some((entry) => entry.name === 'markPanelLoadFailed'), true, 'TbMailPane should expose a panel failure bridge');
+assert.equal(schema[0]?.functions?.some((entry) => entry.name === 'refreshLayout'), true, 'TbMailPane should expose an explicit layout refresh API');
 assert.equal(manifest.experiment_apis?.TbMailPane?.parent?.script, 'api/tbMailPane/implementation.js', 'mailpane experiment should stay registered');
 assert.doesNotMatch(impl, /"-moz-box"/, 'mailpane host should not rely on invalid -moz-box display values');
 assert.match(impl, /host\.hidden\s*=\s*!visible/, 'mailpane host visibility should use the hidden state');
@@ -26,6 +27,9 @@ assert.match(impl, /contentReady:\s*false/, 'mailpane host should track embedded
 assert.match(impl, /function beginPanelLoad\(/, 'mailpane host should centralize embedded panel loading');
 assert.match(impl, /function setPaneLoadState\(/, 'mailpane host should manage loading\/ready\/error state');
 assert.match(impl, /function renderPaneFallback\(/, 'mailpane host should render an inline fallback instead of staying blank');
+assert.match(impl, /async refreshLayout\(\)/, 'mailpane experiment should implement an explicit layout refresh entry point');
+assert.match(impl, /applyPaneGeometry\(win,\s*paneState\)/, 'explicit layout refresh should reuse host geometry recalculation');
+assert.match(impl, /await nextFrame\(win\)/, 'explicit layout refresh should wait a frame before the final geometry pass');
 assert.match(impl, /loadState:\s*paneState\.loadState/, 'getState should expose the current load state');
 assert.match(impl, /contentReady:\s*!!paneState\.contentReady/, 'getState should expose embedded content readiness');
 

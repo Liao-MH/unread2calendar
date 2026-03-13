@@ -1,5 +1,78 @@
 # Changelog
 
+## v2.0.20 - 2026-03-13
+
+### 用户问题
+- 用户反馈第四栏加载后，如果再拖动 Thunderbird 分栏宽度，插件布局不会继续稳定跟随变化
+- 当前唯一稳定可用的办法是先取消加载插件、再重新加载，才能让布局重新适应新的分栏宽度
+- 用户要求重新审查这段自适应代码，删除不必要的部分，并在每次点击工具栏或邮件正文上方工具条里的插件按钮时自动刷新窗口布局
+
+### 讨论与决策摘要
+- 根因不是“首次加载布局错误”，而是“面板已显示后，再次点击按钮”这一真实用户动作没有被当作显式重排入口
+- 现有 `panel.js` 的 `ResizeObserver` 路径并不能稳定覆盖用户调整分栏后的重排时机
+- 决策是改成显式刷新：
+  - 第一次点击按钮仍按原逻辑打开第四栏
+  - 如果第四栏已经可见，再次点击按钮时不重载内容，只强制刷新宿主几何和面板内部布局
+- 决策同时删减 `panel.js` 中这次问题上不够可靠的 `ResizeObserver` 路径，避免继续依赖不稳定的被动监听
+
+### 已做改动
+- 版本号升级到 `2.0.20`
+- `thunderbird-addon/background.js`
+  - 在打开入口中先读取当前 mailpane 状态
+  - 如果第四栏已可见，再次点击按钮时调用显式布局刷新，而不是只重复 `show()`
+  - 向嵌入面板发送 `todo:force-layout-sync` 消息，触发内部重排
+- `thunderbird-addon/api/tbMailPane/schema.json`
+  - 新增 `refreshLayout()` experiment API 声明
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+  - 新增 `refreshLayout()`，在宿主层立即重算一次几何并在下一帧再重算一次
+- `thunderbird-addon/sidebar/panel.js`
+  - 新增 `todo:force-layout-sync` 消息分支
+  - 复用现有 `scheduleMailpaneLayoutSync()` 执行显式重排
+  - 删除 `ResizeObserver` 相关接线与清理逻辑
+- `tests/decision-and-mail-open-policy.test.mjs`
+  - 新增“已显示时再次点击按钮会触发显式布局刷新”的断言
+- `tests/mailpane-open-flow.test.mjs`
+  - 新增 `refreshLayout()` API 暴露与实现约束断言
+- `tests/mailpane-layout.test.mjs`
+  - 新增 `todo:force-layout-sync` 消息断言
+  - 更新为不再要求 `panel.js` 保留 `ResizeObserver` 路径
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v2.0.20`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.20`
+- `AGENTS.md`
+  - 新增仓库级完成要求
+  - 明确每次开发改动完成后都必须更新 `CHANGELOG.md`、生成新的 `.xpi`，并创建 Git commit
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `tests/decision-and-mail-open-policy.test.mjs`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `AGENTS.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.20.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/decision-and-mail-open-policy.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.19 - 2026-03-10
 
 ### 用户问题

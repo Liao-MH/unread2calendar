@@ -595,6 +595,15 @@
               loadState: paneState.loadState
             };
           },
+          async refreshLayout() {
+            const win = getCurrentMailWindow();
+            if (!win) fail("No mail:3pane window available");
+            const paneState = ensurePaneForWindow(win);
+            applyPaneGeometry(win, paneState);
+            await nextFrame(win);
+            applyPaneGeometry(win, paneState);
+            return true;
+          },
           async showFailureAlert(message) {
             const services = getServices();
             const win = getCurrentMailWindow() || services.wm.getMostRecentWindow(null);
