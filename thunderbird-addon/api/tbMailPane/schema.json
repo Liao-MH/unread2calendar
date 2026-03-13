@@ -27,7 +27,7 @@
         "async": true
       },
       {
-        "name": "reloadPanel",
+        "name": "rebuildPane",
         "type": "function",
         "parameters": [],
         "async": true

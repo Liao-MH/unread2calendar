@@ -3008,8 +3008,8 @@ async function openTodoWindowInCurrentContext(tab, toggle) {
     if (browser.TbMailPane) {
       if (typeof browser.TbMailPane.show === 'function') {
         await browser.TbMailPane.show();
-        if (typeof browser.TbMailPane.reloadPanel === 'function') {
-          await browser.TbMailPane.reloadPanel();
+        if (typeof browser.TbMailPane.rebuildPane === 'function') {
+          await browser.TbMailPane.rebuildPane();
         }
         const paneState = await browser.TbMailPane.getState();
         if (!paneState.visible || (!paneState.contentReady && paneState.loadState !== 'error')) {

@@ -534,6 +534,16 @@
     paneByWindow.delete(win);
   }
 
+  function removePaneDom(paneState) {
+    if (!paneState) return;
+    try {
+      if (paneState.splitter && paneState.splitter.parentNode) paneState.splitter.remove();
+      if (paneState.host && paneState.host.parentNode) paneState.host.remove();
+    } catch (_) {
+      // Ignore DOM removal failures.
+    }
+  }
+
   var TbMailPane = class extends ExtensionCommon.ExtensionAPI {
     getAPI(context) {
       ExtensionErrorClass = getExtensionErrorClass();
@@ -595,14 +605,19 @@
               loadState: paneState.loadState
             };
           },
-          async reloadPanel() {
+          async rebuildPane() {
             const win = getCurrentMailWindow();
             if (!win) fail("No mail:3pane window available");
             const paneState = ensurePaneForWindow(win);
-            const visible = await verifyPaneVisible(win, paneState);
-            if (!visible) fail("Mail pane host is still not visible before reloadPanel()");
-            beginPanelLoad(win, paneState, { force: true });
-            await waitForPanelOutcome(win, paneState);
+            removePaneDom(paneState);
+            cleanupWindow(win);
+            const nextPaneState = ensurePaneForWindow(win);
+            if (!nextPaneState) fail("Mail pane host was not recreated");
+            nextPaneState.visible = true;
+            applyPaneGeometry(win, nextPaneState);
+            const visible = await verifyPaneVisible(win, nextPaneState);
+            if (!visible) fail("Mail pane host is still not visible after rebuildPane()");
+            await waitForPanelOutcome(win, nextPaneState);
             return true;
           },
           async showFailureAlert(message) {

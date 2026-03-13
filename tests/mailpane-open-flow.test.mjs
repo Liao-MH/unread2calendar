@@ -16,7 +16,7 @@ assert.match(background, /openTodoWindowInCurrentContext\(tab,\s*false\)/, 'tool
 assert.match(background, /if\s*\(!paneState\.visible\s*\|\|\s*\(!paneState\.contentReady\s*&&\s*paneState\.loadState\s*!==\s*['"]error['"]\)\)/, 'open helper should wait for either ready content or an in-pane error state');
 assert.equal(schema[0]?.functions?.some((entry) => entry.name === 'markPanelReady'), true, 'TbMailPane should expose a panel ready bridge');
 assert.equal(schema[0]?.functions?.some((entry) => entry.name === 'markPanelLoadFailed'), true, 'TbMailPane should expose a panel failure bridge');
-assert.equal(schema[0]?.functions?.some((entry) => entry.name === 'reloadPanel'), true, 'TbMailPane should expose an explicit panel reload API');
+assert.equal(schema[0]?.functions?.some((entry) => entry.name === 'rebuildPane'), true, 'TbMailPane should expose an explicit pane rebuild API');
 assert.equal(manifest.experiment_apis?.TbMailPane?.parent?.script, 'api/tbMailPane/implementation.js', 'mailpane experiment should stay registered');
 assert.doesNotMatch(impl, /"-moz-box"/, 'mailpane host should not rely on invalid -moz-box display values');
 assert.match(impl, /host\.hidden\s*=\s*!visible/, 'mailpane host visibility should use the hidden state');
@@ -27,9 +27,12 @@ assert.match(impl, /contentReady:\s*false/, 'mailpane host should track embedded
 assert.match(impl, /function beginPanelLoad\(/, 'mailpane host should centralize embedded panel loading');
 assert.match(impl, /function setPaneLoadState\(/, 'mailpane host should manage loading\/ready\/error state');
 assert.match(impl, /function renderPaneFallback\(/, 'mailpane host should render an inline fallback instead of staying blank');
-assert.match(impl, /async reloadPanel\(\)/, 'mailpane experiment should implement an explicit panel reload entry point');
-assert.match(impl, /beginPanelLoad\(win,\s*paneState,\s*\{\s*force:\s*true\s*\}\)/, 'panel reload should force a fresh embedded panel load');
-assert.match(impl, /await waitForPanelOutcome\(win,\s*paneState\)/, 'panel reload should wait for the refreshed panel outcome');
+assert.match(impl, /async rebuildPane\(\)/, 'mailpane experiment should implement an explicit pane rebuild entry point');
+assert.match(impl, /if \(paneState\.splitter && paneState\.splitter\.parentNode\) paneState\.splitter\.remove\(\)/, 'pane rebuild should remove the current splitter node');
+assert.match(impl, /if \(paneState\.host && paneState\.host\.parentNode\) paneState\.host\.remove\(\)/, 'pane rebuild should remove the current host node');
+assert.match(impl, /cleanupWindow\(win\)/, 'pane rebuild should clear the previous per-window state before recreating the host');
+assert.match(impl, /const nextPaneState = ensurePaneForWindow\(win\)/, 'pane rebuild should recreate a fresh host through the normal construction path');
+assert.match(impl, /await waitForPanelOutcome\(win,\s*nextPaneState\)/, 'pane rebuild should wait for the rebuilt pane to finish loading');
 assert.match(impl, /loadState:\s*paneState\.loadState/, 'getState should expose the current load state');
 assert.match(impl, /contentReady:\s*!!paneState\.contentReady/, 'getState should expose embedded content readiness');
 

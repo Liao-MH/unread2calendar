@@ -29,13 +29,13 @@ assert.match(
 );
 assert.match(
   backgroundJs,
-  /await browser\.TbMailPane\.reloadPanel\(\)/,
-  'button clicks should reload the embedded mailpane panel'
+  /await browser\.TbMailPane\.rebuildPane\(\)/,
+  'button clicks should rebuild the entire mailpane host'
 );
 assert.doesNotMatch(
   backgroundJs,
-  /await browser\.TbMailPane\.refreshLayout\(\)/,
-  'button reload flow should not use the old in-place layout refresh path'
+  /await browser\.TbMailPane\.reloadPanel\(\)/,
+  'button rebuild flow should not stop at reloading only the embedded panel'
 );
 
 console.log('decision and mail-open policy tests passed');

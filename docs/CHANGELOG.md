@@ -1,5 +1,67 @@
 # Changelog
 
+## v2.0.22 - 2026-03-13
+
+### 用户问题
+- 用户用实际截图确认：点击按钮时只重载整个插件面板，仍然不能像在附加组件管理器里“先取消加载再重新加载”那样重新适应分栏大小变化
+- 用户进一步指出，问题不只是宽度，还包括高度变化后的重新适应
+- 用户要求新的恢复方案应尽量接近“停用再启用附加组件”的效果
+
+### 讨论与决策摘要
+- 根因是当前按钮路径只重载嵌入页面，没有重建第四栏宿主本身
+- 附加组件管理器里的停用再启用之所以有效，是因为它更接近“宿主和页面一起被拆掉再重建”
+- 决策是把按钮点击行为从“reload panel”升级为“rebuild host”：
+  - 按钮点击时先确保 mailpane 宿主处于显示状态
+  - 然后移除当前 splitter、host 和 per-window pane state
+  - 再通过正常构建路径创建一个新的第四栏宿主和新的嵌入页面
+- 宽度不再把旧 pane 宽度当作强约束，而是让新的宿主按当前 Thunderbird 布局环境重新初始化，以便同时改善宽度和高度适配
+
+### 已做改动
+- 版本号升级到 `2.0.22`
+- `thunderbird-addon/background.js`
+  - 将按钮点击后的 mailpane 行为从 `reloadPanel()` 调整为 `rebuildPane()`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+  - 将 experiment API 从 `reloadPanel()` 调整为 `rebuildPane()`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+  - 新增 `removePaneDom()`，负责移除当前 splitter 和 host 节点
+  - 将用户触发恢复路径改为 `rebuildPane()`
+  - `rebuildPane()` 会移除当前宿主 DOM、清理旧的 per-window state，并重新创建新的 pane host
+  - 新的 pane host 创建后重新校验可见性并等待 fresh panel load outcome
+- `tests/decision-and-mail-open-policy.test.mjs`
+  - 更新为要求按钮点击走 `rebuildPane()`
+- `tests/mailpane-open-flow.test.mjs`
+  - 更新为要求 `rebuildPane()` API 暴露与宿主重建实现
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v2.0.22`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.22`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/api/tbMailPane/schema.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `tests/decision-and-mail-open-policy.test.mjs`
+- `tests/mailpane-open-flow.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.22.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/decision-and-mail-open-policy.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.21 - 2026-03-13
 
 ### 用户问题
