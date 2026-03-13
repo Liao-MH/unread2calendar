@@ -1,5 +1,58 @@
 # Changelog
 
+## v2.0.24 - 2026-03-13
+
+### 用户问题
+- 用户要求取消上一版为了更早换行而收紧的 mailpane 顶部按钮横向间距
+- 用户要求按钮本身宽度按“覆盖文字内容后，左右各再扩展半个中文字符”来处理
+- 用户要求第四栏最小宽度直接降到 `100px`，允许极窄状态下界面只是勉强可用
+
+### 讨论与决策摘要
+- 这次不再追求“三行按钮”的特定窄宽度目标，而是直接放开宿主最小宽度限制
+- 决策是做最小改动，不引入新的窄屏专用模式：
+  - 宿主最小宽度改到 `100px`
+  - 恢复 mailpane 顶部按钮之间的正常横向 gap
+  - 按钮自身 `padding-inline` 固定为 `0.5em`
+- 极窄状态下内容拥挤是允许结果，不作为这一步的优化目标
+
+### 已做改动
+- 版本号升级到 `2.0.24`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+  - 将第四栏宿主最小宽度从 `300px` 下调到 `100px`
+  - 保持所有宽度保存、恢复、拖拽钳制逻辑与新的最小宽度一致
+- `thunderbird-addon/sidebar/panel.css`
+  - 恢复 `mailpane` 模式顶部按钮的横向 gap 到非紧缩值
+  - 将 `mailpane` 模式按钮的 `padding-inline` 调整为 `0.5em`
+- `tests/mailpane-layout.test.mjs`
+  - 回归断言更新为 `100px` 最小宽度、正常 gap 和 `0.5em` 按钮留白
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v2.0.24`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v2.0.24`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/api/tbMailPane/implementation.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/mailpane-layout.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-2.0.24.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/mailpane-layout.test.mjs`
+  - `node tests/mailpane-open-flow.test.mjs`
+  - `node tests/release-version.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v2.0.23 - 2026-03-13
 
 ### 用户问题

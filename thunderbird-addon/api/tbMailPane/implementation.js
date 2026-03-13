@@ -14,7 +14,7 @@
     overlayId: "e2c-todo-pane-overlay",
     overlayMessageId: "e2c-todo-pane-overlay-message",
     retryButtonId: "e2c-todo-pane-retry",
-    minWidth: 300,
+    minWidth: 100,
     maxWidth: 960,
     defaultWidth: 520,
     readyTimeoutMs: 3000

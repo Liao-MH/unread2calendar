@@ -27,7 +27,7 @@ assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*height:\s*100%
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*width:\s*100%;/, 'mailpane body should fully occupy the embedded host width');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*--e2c-mailpane-toolbar-group-gap:\s*clamp\(/, 'mailpane should define a larger gap between toolbar groups');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*--e2c-mailpane-toolbar-row-gap:\s*clamp\(/, 'mailpane should define a smaller gap for wrapped rows within a group');
-assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*--e2c-mailpane-control-gap:\s*clamp\(2px,\s*0\.6vw,\s*8px\);/, 'mailpane should tighten inter-button gaps so the primary toolbar can wrap sooner');
+assert.match(panelCss, /body\[data-layout="mailpane"\]\s*\{[\s\S]*--e2c-mailpane-control-gap:\s*clamp\(3px,\s*0\.8vw,\s*10px\);/, 'mailpane should keep the normal inter-button gap instead of the tighter wrapping-specific value');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-groups\s*\{[\s\S]*display:\s*flex;/, 'mailpane toolbar wrapper should stack grouped rows explicitly');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-groups\s*\{[\s\S]*flex-direction:\s*column;/, 'mailpane toolbar wrapper should remain vertically grouped');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-groups\s*\{[\s\S]*gap:\s*var\(--e2c-mailpane-toolbar-group-gap\);/, 'mailpane toolbar wrapper should keep inter-group spacing distinct');
@@ -39,7 +39,7 @@ assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group--single
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group--wrapped\s*\{[\s\S]*justify-content:\s*flex-start;/, 'wrapped toolbar groups should realign to the left');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*>\s*button\s*\{[\s\S]*flex:\s*0\s+0\s+auto;/, 'mailpane toolbar buttons should keep content-driven widths');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*>\s*button\s*\{[\s\S]*white-space:\s*nowrap;/, 'mailpane toolbar buttons should keep labels on one line');
-assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*>\s*button\s*\{[\s\S]*padding-inline:\s*clamp\(0\.55ch,\s*0\.75vw,\s*0\.85ch\);/, 'mailpane toolbar buttons should use tighter inline padding in mailpane mode');
+assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.toolbar-group\s*>\s*button\s*\{[\s\S]*padding-inline:\s*0\.5em;/, 'mailpane toolbar buttons should use half-character horizontal padding in mailpane mode');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.groups\s*\{[\s\S]*min-height:\s*0;/, 'mailpane groups area should absorb remaining height and stay scrollable');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.groups\s*\{[\s\S]*overflow:\s*auto;/, 'mailpane groups area should own the main scroll behavior');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.groups\s*\{[\s\S]*gap:\s*var\(--e2c-mailpane-group-gap\);/, 'mailpane groups area should compress internal vertical spacing as height shrinks');
@@ -47,6 +47,6 @@ assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.footer\s*\{[\s\S]*dis
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.footer\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\);/, 'mailpane footer should stack modules vertically in narrow widths');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.footer\s*\{[\s\S]*overflow:\s*hidden;/, 'mailpane footer should keep its visible region stable');
 assert.match(panelCss, /body\[data-layout="mailpane"\]\s+\.imported-host\s*\{[\s\S]*overflow:\s*auto;/, 'mailpane imported section should scroll inside the footer instead of pushing it away');
-assert.match(mailpaneImpl, /minWidth:\s*300/, 'mailpane host should lower its minimum width enough for the primary toolbar to wrap into three visible rows overall');
+assert.match(mailpaneImpl, /minWidth:\s*100/, 'mailpane host should allow shrinking all the way down to 100px');
 
 console.log('mailpane layout tests passed');
