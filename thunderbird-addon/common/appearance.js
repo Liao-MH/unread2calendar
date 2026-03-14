@@ -12,6 +12,10 @@
 
   const DEFAULT_APPEARANCE = Object.freeze({
     themeId: 'follow_tb',
+    overrides: Object.freeze({
+      basic: Object.freeze({}),
+      advanced: Object.freeze({})
+    }),
     basic: Object.freeze({
       textColor: '#141824',
       baseFontSize: 14,
@@ -89,6 +93,7 @@
     const out = clone(base);
     const src = patch && typeof patch === 'object' ? patch : {};
     if (src.themeId) out.themeId = src.themeId;
+    if (src.overrides && typeof src.overrides === 'object') out.overrides = clone(src.overrides);
     if (src.basic && typeof src.basic === 'object') Object.assign(out.basic, src.basic);
     if (src.advanced && typeof src.advanced === 'object') Object.assign(out.advanced, src.advanced);
     return out;
@@ -111,15 +116,21 @@
     return '';
   }
 
-  function normalizeAppearance(input) {
+  function resolveThemeId(raw) {
     const warnings = [];
-    const raw = input && typeof input === 'object' ? input : {};
-    const merged = mergeAppearance(DEFAULT_APPEARANCE, raw);
-    const rawThemeId = String(raw.themeId || '').trim();
+    const rawThemeId = String(raw && raw.themeId || '').trim();
     const candidateThemeId = rawThemeId || legacyThemeIdFromAppearance(raw) || DEFAULT_APPEARANCE.themeId;
     const validThemeIds = new Set(['follow_tb', 'custom', ...Object.keys(PRESETS)]);
     const themeId = validThemeIds.has(candidateThemeId) ? candidateThemeId : DEFAULT_APPEARANCE.themeId;
     if (themeId !== candidateThemeId) warnings.push('themeId');
+    return { themeId, warnings };
+  }
+
+  function normalizeResolvedAppearance(input) {
+    const warnings = [];
+    const raw = input && typeof input === 'object' ? input : {};
+    const merged = mergeAppearance(DEFAULT_APPEARANCE, raw);
+    const themeId = String(raw.themeId || merged.themeId || DEFAULT_APPEARANCE.themeId).trim() || DEFAULT_APPEARANCE.themeId;
 
     const basic = {
       textColor: normalizeColor(merged.basic.textColor, DEFAULT_APPEARANCE.basic.textColor),
@@ -170,25 +181,111 @@
       actionGap: clampNumber(merged.advanced.actionGap, DEFAULT_APPEARANCE.advanced.actionGap, 0, 36),
       groupStyles: normalizedGroupStyles
     };
-    const normalized = { themeId, basic, advanced };
-    return { appearance: normalized, warnings };
+    return {
+      appearance: {
+        themeId,
+        overrides: clone((raw.overrides && typeof raw.overrides === 'object') ? raw.overrides : DEFAULT_APPEARANCE.overrides),
+        basic,
+        advanced
+      },
+      warnings
+    };
+  }
+
+  function resolvePresetId(themeId, options) {
+    if (themeId === 'follow_tb') {
+      return options && options.isThunderbirdDark ? 'contrast_dark' : 'contrast_light';
+    }
+    return themeId;
+  }
+
+  function buildThemeBaseAppearance(themeId, options) {
+    const presetId = resolvePresetId(themeId, options);
+    const preset = themeId === 'custom' ? {} : (PRESETS[presetId] || {});
+    return normalizeResolvedAppearance({
+      ...mergeAppearance(DEFAULT_APPEARANCE, preset),
+      themeId,
+      overrides: clone(DEFAULT_APPEARANCE.overrides)
+    }).appearance;
+  }
+
+  function diffGroupStyles(baseStyles, effectiveStyles) {
+    const out = {};
+    const keys = new Set([
+      ...Object.keys(baseStyles || {}),
+      ...Object.keys(effectiveStyles || {})
+    ]);
+    for (const key of keys) {
+      const base = baseStyles && baseStyles[key] ? baseStyles[key] : { accent: '', bg: '' };
+      const effective = effectiveStyles && effectiveStyles[key] ? effectiveStyles[key] : { accent: '', bg: '' };
+      const next = {};
+      if (String(effective.accent || '') !== String(base.accent || '')) next.accent = effective.accent;
+      if (String(effective.bg || '') !== String(base.bg || '')) next.bg = effective.bg;
+      if (Object.keys(next).length > 0) out[key] = next;
+    }
+    return out;
+  }
+
+  function buildOverrides(base, effective) {
+    const basic = {};
+    const basicKeys = [
+      'textColor', 'baseFontSize', 'titleBold', 'eventGap', 'groupGap', 'moduleBg', 'buttonBg', 'buttonText'
+    ];
+    for (const key of basicKeys) {
+      if (effective.basic[key] !== base.basic[key]) basic[key] = effective.basic[key];
+    }
+
+    const advanced = {};
+    const advancedKeys = [
+      'groupTitleColor', 'groupTitleSize', 'itemTitleColor', 'itemTitleSize', 'metaColor', 'metaSize',
+      'statusColor', 'statusSize', 'cardBg', 'cardBorderColor', 'cardRadius', 'cardShadow',
+      'cardMinHeight', 'cardPaddingY', 'cardPaddingX', 'cardGap', 'actionGap'
+    ];
+    for (const key of advancedKeys) {
+      if (effective.advanced[key] !== base.advanced[key]) advanced[key] = effective.advanced[key];
+    }
+
+    const groupStyles = diffGroupStyles(
+      base.advanced && base.advanced.groupStyles,
+      effective.advanced && effective.advanced.groupStyles
+    );
+    if (Object.keys(groupStyles).length > 0) advanced.groupStyles = groupStyles;
+
+    return { basic, advanced };
+  }
+
+  function normalizeAppearance(input, options) {
+    const raw = input && typeof input === 'object' ? input : {};
+    const themeResult = resolveThemeId(raw);
+    const themeId = themeResult.themeId;
+    const base = buildThemeBaseAppearance(themeId, options);
+    const rawOverrides = raw.overrides && typeof raw.overrides === 'object'
+      ? raw.overrides
+      : {
+        basic: raw.basic && typeof raw.basic === 'object' ? raw.basic : {},
+        advanced: raw.advanced && typeof raw.advanced === 'object' ? raw.advanced : {}
+      };
+    const candidate = mergeAppearance(base, {
+      themeId,
+      basic: rawOverrides.basic,
+      advanced: rawOverrides.advanced
+    });
+    const normalizedResult = normalizeResolvedAppearance(candidate);
+    const effective = normalizedResult.appearance;
+    const overrides = buildOverrides(base, effective);
+    return {
+      appearance: {
+        themeId,
+        basic: effective.basic,
+        advanced: effective.advanced,
+        overrides
+      },
+      warnings: [...themeResult.warnings, ...normalizedResult.warnings]
+    };
   }
 
   function effectiveAppearance(input, options) {
-    const { appearance } = normalizeAppearance(input);
-    const isThunderbirdDark = !!(options && options.isThunderbirdDark);
-    const themeId = appearance.themeId;
-    const followPresetId = isThunderbirdDark ? 'contrast_dark' : 'contrast_light';
-    let presetId = themeId;
-    if (themeId === 'follow_tb') {
-      presetId = followPresetId;
-    }
-    const preset = themeId === 'custom' ? {} : (PRESETS[presetId] || {});
-    const mergedPreset = mergeAppearance(appearance, preset);
-    return normalizeAppearance({
-      ...mergedPreset,
-      themeId
-    }).appearance;
+    return normalizeAppearance(input, options).appearance;
   }
 
   function toCssVariables(input, options) {

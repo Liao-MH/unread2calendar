@@ -53,9 +53,9 @@ Typical scenarios:
 Build artifacts are in `dist/`.
 
 Example current package:
-- `dist/unread2calendar-thunderbird-3.0.2.xpi`
+- `dist/unread2calendar-thunderbird-3.0.3.xpi`
 - Release direct download (after publishing):
-  - `https://github.com/Liao-MH/unread2calendar/releases/download/v3.0.2/unread2calendar-thunderbird-3.0.2.xpi`
+  - `https://github.com/Liao-MH/unread2calendar/releases/download/v3.0.3/unread2calendar-thunderbird-3.0.3.xpi`
 
 ### 2) Install in Thunderbird
 1. Open Thunderbird.
@@ -225,5 +225,5 @@ Local model notes:
 - Dev changelog: `docs/CHANGELOG.md`
 
 ## Version & Updates
-- This README targets add-on version: `v3.0.2`
+- This README targets add-on version: `v3.0.3`
 - Full release history: [docs/CHANGELOG.md](./docs/CHANGELOG.md)

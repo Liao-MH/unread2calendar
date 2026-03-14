@@ -1202,7 +1202,7 @@ function collectAppearancePayload() {
       groupStyles: buildAppearanceGroupStylesPayload()
     }
   };
-  return api.normalizeAppearance(candidate);
+  return api.normalizeAppearance(candidate, { isThunderbirdDark: isThunderbirdDarkMode() });
 }
 
 function isThunderbirdDarkMode() {
@@ -1246,17 +1246,46 @@ function applyAppearanceToDocument(appearance) {
   api.applyCssVariables(document.documentElement, vars);
 }
 
+async function previewAppearanceInPanel(appearance) {
+  try {
+    await browser.runtime.sendMessage({
+      type: 'todo:preview-appearance',
+      appearance
+    });
+  } catch (_) {
+    // Best effort for live preview only.
+  }
+}
+
+async function clearAppearancePreviewInPanel() {
+  try {
+    await browser.runtime.sendMessage({ type: 'todo:clear-appearance-preview' });
+  } catch (_) {
+    // Best effort for live preview only.
+  }
+}
+
+function getCurrentThemeBaseAppearance(themeId) {
+  const api = appearanceApi();
+  if (!api) {
+    throw new Error('Appearance module missing');
+  }
+  return api.effectiveAppearance({
+    themeId: String(themeId || appearanceTheme.value || (state.appearance && state.appearance.themeId) || 'follow_tb')
+  }, { isThunderbirdDark: isThunderbirdDarkMode() });
+}
+
 function reapplyFollowThunderbirdAppearance() {
   if (state.appearance && state.appearance.themeId === 'follow_tb') {
-    applyAppearanceToDocument(state.appearance);
-    renderAppearancePreview();
+    applyAppearanceForm(state.appearance);
+    void previewAppearanceInPanel(state.appearance);
   }
 }
 
 function applyAppearanceForm(appearance) {
   const api = appearanceApi();
   if (!api) return;
-  const normalized = api.normalizeAppearance(appearance).appearance;
+  const normalized = api.normalizeAppearance(appearance, { isThunderbirdDark: isThunderbirdDarkMode() }).appearance;
   state.appearance = normalized;
   appearanceTheme.value = normalized.themeId;
 
@@ -1534,6 +1563,7 @@ async function saveAppearanceSection() {
       setAppearanceStatus(message);
       showSavePopup(true, message);
     }
+    await clearAppearancePreviewInPanel();
     markPageClean('appearance');
   } catch (error) {
     const message = `外观配置保存失败：${error.message || error}`;
@@ -1664,21 +1694,25 @@ function onModelPresetChanged() {
 
 function onAppearanceChanged(event) {
   try {
-    // If user edits concrete appearance fields while following Thunderbird theme,
-    // switch to custom so edits are immediately visible in preview and panel.
     const target = event && event.target ? event.target : null;
-    if (target && appearanceTheme.value === 'follow_tb') {
-      const noAutoSwitch = new Set(['appearanceTheme']);
-      const targetId = String(target.id || '');
-      if (targetId && !noAutoSwitch.has(targetId)) {
-        appearanceTheme.value = 'custom';
-      }
+    const targetId = String(target && target.id || '');
+    if (targetId === 'appearanceTheme') {
+      const api = appearanceApi();
+      if (!api) throw new Error('Appearance module missing');
+      const next = api.normalizeAppearance({
+        themeId: appearanceTheme.value,
+        overrides: state.appearance && state.appearance.overrides ? state.appearance.overrides : {}
+      }, { isThunderbirdDark: isThunderbirdDarkMode() });
+      applyAppearanceForm(next.appearance);
+      void previewAppearanceInPanel(next.appearance);
+      return;
     }
     const normalized = collectAppearancePayload();
     state.appearance = normalized.appearance;
     applyAppearanceToDocument(normalized.appearance);
     updateAppearanceInputState();
     renderAppearancePreview();
+    void previewAppearanceInPanel(normalized.appearance);
   } catch (error) {
     setAppearanceStatus(`外观预览失败：${error.message || error}`);
   }
@@ -1693,12 +1727,12 @@ function getDefaultAppearance() {
   if (!api || !api.DEFAULT_APPEARANCE) {
     throw new Error('Appearance defaults missing');
   }
-  return api.normalizeAppearance(api.DEFAULT_APPEARANCE).appearance;
+  return api.normalizeAppearance(api.DEFAULT_APPEARANCE, { isThunderbirdDark: isThunderbirdDarkMode() }).appearance;
 }
 
 function resetAppearanceModule(moduleKey) {
   const current = collectAppearancePayload().appearance;
-  const defaults = getDefaultAppearance();
+  const defaults = getCurrentThemeBaseAppearance(current.themeId);
   const next = {
     ...current,
     basic: { ...current.basic },
@@ -1711,7 +1745,6 @@ function resetAppearanceModule(moduleKey) {
   };
 
   if (moduleKey === 'top') {
-    next.themeId = defaults.themeId;
     next.basic.textColor = defaults.basic.textColor;
     next.basic.baseFontSize = defaults.basic.baseFontSize;
     next.basic.titleBold = defaults.basic.titleBold;
@@ -1745,13 +1778,15 @@ function resetAppearanceModule(moduleKey) {
   }
 
   applyAppearanceForm(next);
+  void previewAppearanceInPanel(state.appearance);
   setAppearanceResetPendingStatus();
 }
 
 function resetAppearanceAll() {
   const ok = window.confirm('确定要将外观配置全部恢复默认吗？此操作不会自动保存。');
   if (!ok) return;
-  applyAppearanceForm(getDefaultAppearance());
+  applyAppearanceForm(getCurrentThemeBaseAppearance());
+  void previewAppearanceInPanel(state.appearance);
   setAppearanceResetPendingStatus();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1896,6 +1931,10 @@ if (importSettingsFile) {
     importSettingsFile.value = '';
   });
 }
+
+window.addEventListener('beforeunload', () => {
+  void clearAppearancePreviewInPanel();
+});
 
 if (thunderbirdThemeQuery) {
   if (typeof thunderbirdThemeQuery.addEventListener === 'function') {

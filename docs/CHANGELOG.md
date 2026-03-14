@@ -1,5 +1,73 @@
 # Changelog
 
+## v3.0.3 - 2026-03-14
+
+### 用户问题
+- 用户要求任何主题下的外观设置都应该可被修改，并且主题名保持不变
+- 用户要求所有外观修改都能被实时预览，不仅配置页预览要立即变化，已打开的第四栏也要立即同步
+
+### 讨论与决策摘要
+- 根因确认有两处：
+  - 当前外观模型本质上仍然是“主题结果二选一”，在编辑 `follow_tb` 等主题时会强制切到 `custom`
+  - `options` 页没有把未保存的外观编辑实时推送给已打开的第四栏，所以实时预览只停留在配置页
+- 决策是：
+  - 将外观模型调整为“主题底板 + 稀疏 overrides 覆盖层”
+  - 保持当前 `themeId` 不变，任何主题都允许直接编辑
+  - 为第四栏增加临时外观预览消息通道，在不写入存储的前提下实时刷新
+  - “恢复本模块默认/全部恢复默认”改为恢复当前主题底板，而不是偷偷切换主题
+
+### 已做改动
+- 版本号升级到 `3.0.3`
+- `thunderbird-addon/common/appearance.js`
+  - 外观模型新增 `overrides`
+  - 有效外观改为“主题底板 + 手动覆盖”的合成结果
+  - `follow_tb` 在深浅色切换时继续按 Thunderbird 当前主题解析，但保留已编辑覆盖值
+- `thunderbird-addon/options/options.js`
+  - 删除编辑外观时自动切换到 `custom` 的逻辑
+  - 外观编辑改为保留当前主题名，并实时生成 overrides
+  - 新增未保存外观的第四栏实时预览与清理消息
+  - 恢复外观默认值时改为恢复“当前主题”的底板样式
+- `thunderbird-addon/background.js`
+  - 新增外观实时预览消息转发
+- `thunderbird-addon/sidebar/panel.js`
+  - 新增临时外观预览状态
+  - 已打开第四栏可实时应用和清除未保存的外观预览
+- `tests/appearance-theme-overrides.test.mjs`
+  - 新增真实行为测试，验证主题保持不变且 overrides 生效
+- `tests/appearance-follow-thunderbird.test.mjs`
+  - 新增不自动切 `custom`、实时预览消息链路相关断言
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.3`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.3`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/common/appearance.js`
+- `thunderbird-addon/options/options.js`
+- `thunderbird-addon/background.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `tests/appearance-theme-overrides.test.mjs`
+- `tests/appearance-follow-thunderbird.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.3.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/appearance-theme-overrides.test.mjs`
+  - `node tests/appearance-follow-thunderbird.test.mjs`
+  - `node tests/options-appearance-modules.test.mjs`
+  - `node tests/group-decision-colors.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.2 - 2026-03-14
 
 ### 用户问题

@@ -149,6 +149,7 @@ const I18N = {
 };
 
 let vm = null;
+let previewAppearance = null;
 let mailPaneReadySent = false;
 let mailPaneFailureSent = false;
 let mailPaneLayoutSyncScheduled = false;
@@ -388,6 +389,10 @@ function applyAppearance(appearance) {
     isThunderbirdDark: !!(thunderbirdThemeQuery && thunderbirdThemeQuery.matches)
   });
   api.applyCssVariables(document.documentElement, vars);
+}
+
+function currentAppearance() {
+  return previewAppearance || (vm && vm.appearance) || null;
 }
 
 function cloneMap(map) {
@@ -1008,7 +1013,7 @@ function renderSingleGroup(host, group) {
   const frag = el.groupTpl.content.cloneNode(true);
   const container = frag.querySelector('.group');
   container.dataset.groupKey = group.key;
-  const visual = resolveGroupVisual(group.key, vm && vm.appearance);
+  const visual = resolveGroupVisual(group.key, currentAppearance());
   container.style.setProperty('--group-accent', visual.accent);
   container.style.setProperty('--group-confirm-text', visual.confirmText);
   container.style.setProperty('--group-bg', visual.surfaceBg || 'var(--e2c-card-bg)');
@@ -1133,7 +1138,7 @@ function render() {
   if (!vm) return;
 
   const prevScrollTop = currentScrollTop();
-  applyAppearance(vm.appearance);
+  applyAppearance(currentAppearance());
   applyStaticText();
   const running = !!(vm.scan && vm.scan.running);
   const paused = !!(vm.scan && vm.scan.paused);
@@ -1383,6 +1388,16 @@ window.onunhandledrejection = function(event) {
 browser.runtime.onMessage.addListener((message) => {
   if (message && message.type === 'todo:state-changed') {
     refresh();
+    return;
+  }
+  if (message && message.type === 'todo:apply-appearance-preview') {
+    previewAppearance = message.appearance || null;
+    render();
+    return;
+  }
+  if (message && message.type === 'todo:clear-appearance-preview') {
+    previewAppearance = null;
+    refresh();
   }
 });
 
@@ -1407,8 +1422,8 @@ window.addEventListener('beforeunload', saveUiState);
 window.addEventListener('resize', scheduleMailpaneLayoutSync);
 if (thunderbirdThemeQuery) {
   const reapplyThunderbirdFollowAppearance = () => {
-    if (vm && vm.appearance && vm.appearance.themeId === 'follow_tb') {
-      applyAppearance(vm.appearance);
+    if (currentAppearance() && currentAppearance().themeId === 'follow_tb') {
+      applyAppearance(currentAppearance());
     }
   };
   if (typeof thunderbirdThemeQuery.addEventListener === 'function') {

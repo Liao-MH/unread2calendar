@@ -3325,6 +3325,17 @@ browser.runtime.onMessage.addListener((message) => {
         await broadcastStateChanged();
         return saved;
       }
+      case 'todo:preview-appearance': {
+        await browser.runtime.sendMessage({
+          type: 'todo:apply-appearance-preview',
+          appearance: message.appearance || null
+        });
+        return { ok: true };
+      }
+      case 'todo:clear-appearance-preview': {
+        await browser.runtime.sendMessage({ type: 'todo:clear-appearance-preview' });
+        return { ok: true };
+      }
       case 'todo:get-local-rules': {
         const settings = await getSettings();
         return settings.localRules || cloneDefaultLocalRules();
