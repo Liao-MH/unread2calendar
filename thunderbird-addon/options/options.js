@@ -57,8 +57,7 @@ const importSettingsFile = document.getElementById('importSettingsFile');
 const settingsNav = document.getElementById('settingsNav');
 const settingsPagesRoot = document.getElementById('settingsPages');
 
-const appearanceMode = document.getElementById('appearanceMode');
-const appearancePreset = document.getElementById('appearancePreset');
+const appearanceTheme = document.getElementById('appearanceTheme');
 const appearanceTextColor = document.getElementById('appearanceTextColor');
 const appearanceBaseFontSize = document.getElementById('appearanceBaseFontSize');
 const appearanceTitleBold = document.getElementById('appearanceTitleBold');
@@ -130,6 +129,9 @@ const appearanceGroupBgInputs = [
   appearanceGroupBgOther,
   appearanceGroupBgUnrecognized
 ];
+const thunderbirdThemeQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+  ? window.matchMedia('(prefers-color-scheme: dark)')
+  : null;
 
 const DEFAULT_PROMPT = `你是邮件待办识别器。请基于单封邮件内容尽可能完整识别所有待办事件。
 只能输出 JSON，不要输出解释、不要 Markdown、不要代码块。
@@ -509,8 +511,7 @@ const FIELD_HELP_TEXT_ZH = Object.freeze({
   groupImportantInput: '命中后更倾向判定为“可能重要的事”。',
   groupOtherInput: '兜底关键词，未匹配到其他分组时参考。',
   debugMode: '开启后在侧栏显示当前邮件上下文，便于排查。',
-  appearanceMode: '跟随 Thunderbird 或切换到预设/自定义主题。',
-  appearancePreset: '选择预设配色后可再按需微调。',
+  appearanceTheme: '统一控制跟随 Thunderbird、固定预设和完全自定义。',
   appearanceTextColor: '整体正文文字颜色。',
   appearanceBaseFontSize: '全局基础字号。',
   appearanceTitleBold: '控制标题是否加粗。',
@@ -1085,10 +1086,8 @@ function updateAdvancedInputState() {
 }
 
 function updateAppearanceInputState() {
-  const mode = appearanceMode.value;
-  appearancePreset.disabled = mode !== 'preset';
   // Keep color pickers interactive in all modes so users can preconfigure colors.
-  // In follow_tb mode these values are saved, and applied after switching mode.
+  // In follow_tb mode these values are saved, and applied after switching theme.
   appearanceColorInputs.forEach((node) => {
     node.disabled = false;
   });
@@ -1157,8 +1156,7 @@ function collectAppearancePayload() {
   const api = appearanceApi();
   if (!api) throw new Error('Appearance module missing');
   const candidate = {
-    mode: appearanceMode.value,
-    presetId: appearancePreset.value,
+    themeId: appearanceTheme.value,
     basic: {
       textColor: appearanceTextColor.value,
       baseFontSize: numberValue(appearanceBaseFontSize, 14),
@@ -1191,6 +1189,10 @@ function collectAppearancePayload() {
     }
   };
   return api.normalizeAppearance(candidate);
+}
+
+function isThunderbirdDarkMode() {
+  return !!(thunderbirdThemeQuery && thunderbirdThemeQuery.matches);
 }
 
 function slugGroupLabel(value) {
@@ -1226,8 +1228,15 @@ function buildAppearanceGroupStylesPayload() {
 function applyAppearanceToDocument(appearance) {
   const api = appearanceApi();
   if (!api) return;
-  const vars = api.toCssVariables(appearance);
+  const vars = api.toCssVariables(appearance, { isThunderbirdDark: isThunderbirdDarkMode() });
   api.applyCssVariables(document.documentElement, vars);
+}
+
+function reapplyFollowThunderbirdAppearance() {
+  if (state.appearance && state.appearance.themeId === 'follow_tb') {
+    applyAppearanceToDocument(state.appearance);
+    renderAppearancePreview();
+  }
 }
 
 function applyAppearanceForm(appearance) {
@@ -1235,8 +1244,7 @@ function applyAppearanceForm(appearance) {
   if (!api) return;
   const normalized = api.normalizeAppearance(appearance).appearance;
   state.appearance = normalized;
-  appearanceMode.value = normalized.mode;
-  appearancePreset.value = normalized.presetId;
+  appearanceTheme.value = normalized.themeId;
 
   appearanceTextColor.value = normalized.basic.textColor;
   appearanceBaseFontSize.value = String(normalized.basic.baseFontSize);
@@ -1645,11 +1653,11 @@ function onAppearanceChanged(event) {
     // If user edits concrete appearance fields while following Thunderbird theme,
     // switch to custom so edits are immediately visible in preview and panel.
     const target = event && event.target ? event.target : null;
-    if (target && appearanceMode.value === 'follow_tb') {
-      const noAutoSwitch = new Set(['appearanceMode', 'appearancePreset']);
+    if (target && appearanceTheme.value === 'follow_tb') {
+      const noAutoSwitch = new Set(['appearanceTheme']);
       const targetId = String(target.id || '');
       if (targetId && !noAutoSwitch.has(targetId)) {
-        appearanceMode.value = 'custom';
+        appearanceTheme.value = 'custom';
       }
     }
     const normalized = collectAppearancePayload();
@@ -1689,8 +1697,7 @@ function resetAppearanceModule(moduleKey) {
   };
 
   if (moduleKey === 'top') {
-    next.mode = defaults.mode;
-    next.presetId = defaults.presetId;
+    next.themeId = defaults.themeId;
     next.basic.textColor = defaults.basic.textColor;
     next.basic.baseFontSize = defaults.basic.baseFontSize;
     next.basic.titleBold = defaults.basic.titleBold;
@@ -1876,9 +1883,16 @@ if (importSettingsFile) {
   });
 }
 
+if (thunderbirdThemeQuery) {
+  if (typeof thunderbirdThemeQuery.addEventListener === 'function') {
+    thunderbirdThemeQuery.addEventListener('change', reapplyFollowThunderbirdAppearance);
+  } else if (typeof thunderbirdThemeQuery.addListener === 'function') {
+    thunderbirdThemeQuery.addListener(reapplyFollowThunderbirdAppearance);
+  }
+}
+
 [
-  appearanceMode,
-  appearancePreset,
+  appearanceTheme,
   appearanceTextColor,
   appearanceBaseFontSize,
   appearanceTitleBold,

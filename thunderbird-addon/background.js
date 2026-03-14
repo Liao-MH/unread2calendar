@@ -891,12 +891,13 @@ function buildProgressLine(kind, index, total, extractedCount) {
   return zh ? `处理中 ${x}/${y}` : `Processing ${x}/${y}`;
 }
 
-function buildFinalSummaryLine(processed, extracted) {
+function buildFinalSummaryLine(processed, extracted, keywordUpdates) {
   const p = Math.max(0, Number(processed) || 0);
   const e = Math.max(0, Number(extracted) || 0);
+  const k = Math.max(0, Number(keywordUpdates) || 0);
   return /^zh\b/.test(uiLangTag())
-    ? `已处理 ${p} 封邮件，识别到 ${e} 个事件`
-    : `Processed ${p} emails, recognized ${e} events`;
+    ? `已处理 ${p} 封邮件，识别到 ${e} 个事件，更新 ${k} 个规则关键词`
+    : `Processed ${p} emails, recognized ${e} events, updated ${k} rule keyword(s)`;
 }
 
 function parseLooseJson(text) {
@@ -1299,13 +1300,35 @@ function resolveGroupDefinitionIdByLabel(groupLabel, groupDefinitions) {
   return '';
 }
 
+function resolveGroupDefinitionIdForEvent(event, groupDefinitions) {
+  const byLabel = resolveGroupDefinitionIdByLabel(event && event.groupLabel, groupDefinitions);
+  if (byLabel) return byLabel;
+  const defs = Array.isArray(groupDefinitions) ? groupDefinitions : [];
+  const labelSlug = slugGroup(event && event.groupLabel);
+  const normalizedGroup = String(event && event.group || '').replace(/^llm-/, '').replace(/^grp-/, '');
+  const groupSlug = slugGroup(normalizedGroup);
+  for (const def of defs) {
+    const defId = normalizeText(def && typeof def === 'object' ? def.id : '');
+    const defLabel = normalizeText(def && typeof def === 'object' ? def.label : def);
+    if (!defId || !defLabel) continue;
+    const defLabelSlug = slugGroup(defLabel);
+    const defIdSlug = String(defId).replace(/^grp-/, '');
+    if ((labelSlug && defLabelSlug === labelSlug)
+      || (groupSlug && (defLabelSlug === groupSlug || defIdSlug === groupSlug))) {
+      return defId;
+    }
+  }
+  return '';
+}
+
 function mergeLlmKeywordsIntoLocalRules(localRulesInput, groupDefinitions, events) {
   const localRules = normalizeLocalRules(localRulesInput || {});
   let changed = false;
+  let addedCount = 0;
   for (const event of events || []) {
     const keywords = normalizeLlmKeywordList(event && event.categoryKeywords);
     if (keywords.length === 0) continue;
-    const groupId = resolveGroupDefinitionIdByLabel(event && event.groupLabel, groupDefinitions);
+    const groupId = resolveGroupDefinitionIdForEvent(event, groupDefinitions);
     const fallbackGroupKey = normalizeText(event && event.group);
     const targetKey = groupId || fallbackGroupKey;
     if (!targetKey) continue;
@@ -1314,9 +1337,10 @@ function mergeLlmKeywordsIntoLocalRules(localRulesInput, groupDefinitions, event
     if (merged.length !== existing.length) {
       localRules.groupKeywords[targetKey] = merged;
       changed = true;
+      addedCount += merged.length - existing.length;
     }
   }
-  return { changed, localRules };
+  return { changed, localRules, addedCount };
 }
 
 function sanitizeLLMEventsResult(raw, message, allowedGroups, fallbackTimeZone) {
@@ -2349,6 +2373,7 @@ async function extractFromMessages(messages, options) {
   let ignored = 0;
   let failed = 0;
   let llmRuleKeywordsChanged = false;
+  let llmRuleKeywordAddedCount = 0;
   let llmRuleKeywordsState = normalizeLocalRules(settings.localRules || {});
 
   const progressTick = async (line) => {
@@ -2412,6 +2437,7 @@ async function extractFromMessages(messages, options) {
           if (mergedKeywords.changed) {
             llmRuleKeywordsState = mergedKeywords.localRules;
             llmRuleKeywordsChanged = true;
+            llmRuleKeywordAddedCount += mergedKeywords.addedCount || 0;
           }
           const newTodos = validEvents.map((ev) => createTodoFromExtract(message, ev));
           workingTodos = recomputeDuplicates(mergeScannedItems(workingTodos, newTodos));
@@ -2486,7 +2512,7 @@ async function extractFromMessages(messages, options) {
     }
   }
   stopRecognitionScan(cancelled ? 'cancelled' : 'done');
-  state.scan.line = buildFinalSummaryLine(processed, extracted);
+  state.scan.line = buildFinalSummaryLine(processed, extracted, llmRuleKeywordAddedCount);
   setStatus(state.scan.line);
   await progressTick();
 

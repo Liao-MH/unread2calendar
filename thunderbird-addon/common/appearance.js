@@ -11,8 +11,7 @@
   });
 
   const DEFAULT_APPEARANCE = Object.freeze({
-    mode: 'follow_tb',
-    presetId: 'system',
+    themeId: 'follow_tb',
     basic: Object.freeze({
       textColor: '#141824',
       baseFontSize: 14,
@@ -46,7 +45,6 @@
   });
 
   const PRESETS = Object.freeze({
-    system: {},
     contrast_light: {
       basic: { textColor: '#0f172a', moduleBg: '#ffffff', buttonBg: '#0b5fff', buttonText: '#ffffff' },
       advanced: { cardBg: '#ffffff', cardBorderColor: '#94a3b8', metaColor: '#334155', statusColor: '#334155' }
@@ -90,21 +88,38 @@
   function mergeAppearance(base, patch) {
     const out = clone(base);
     const src = patch && typeof patch === 'object' ? patch : {};
-    if (src.mode) out.mode = src.mode;
-    if (src.presetId) out.presetId = src.presetId;
+    if (src.themeId) out.themeId = src.themeId;
     if (src.basic && typeof src.basic === 'object') Object.assign(out.basic, src.basic);
     if (src.advanced && typeof src.advanced === 'object') Object.assign(out.advanced, src.advanced);
     return out;
+  }
+
+  function legacyThemeIdFromAppearance(raw) {
+    const mode = raw && typeof raw === 'object' ? String(raw.mode || '').trim() : '';
+    const presetId = raw && typeof raw === 'object' ? String(raw.presetId || '').trim() : '';
+    if (mode === 'follow_tb') return 'follow_tb';
+    if (mode === 'custom') return 'custom';
+    if (mode === 'preset') {
+      if (presetId && presetId !== 'system' && Object.prototype.hasOwnProperty.call(PRESETS, presetId)) {
+        return presetId;
+      }
+      return 'contrast_light';
+    }
+    if (presetId && presetId !== 'system' && Object.prototype.hasOwnProperty.call(PRESETS, presetId)) {
+      return presetId;
+    }
+    return '';
   }
 
   function normalizeAppearance(input) {
     const warnings = [];
     const raw = input && typeof input === 'object' ? input : {};
     const merged = mergeAppearance(DEFAULT_APPEARANCE, raw);
-    const mode = ['follow_tb', 'preset', 'custom'].includes(merged.mode) ? merged.mode : DEFAULT_APPEARANCE.mode;
-    if (mode !== merged.mode) warnings.push('mode');
-    const presetId = Object.prototype.hasOwnProperty.call(PRESETS, merged.presetId) ? merged.presetId : DEFAULT_APPEARANCE.presetId;
-    if (presetId !== merged.presetId) warnings.push('presetId');
+    const rawThemeId = String(raw.themeId || '').trim();
+    const candidateThemeId = rawThemeId || legacyThemeIdFromAppearance(raw) || DEFAULT_APPEARANCE.themeId;
+    const validThemeIds = new Set(['follow_tb', 'custom', ...Object.keys(PRESETS)]);
+    const themeId = validThemeIds.has(candidateThemeId) ? candidateThemeId : DEFAULT_APPEARANCE.themeId;
+    if (themeId !== candidateThemeId) warnings.push('themeId');
 
     const basic = {
       textColor: normalizeColor(merged.basic.textColor, DEFAULT_APPEARANCE.basic.textColor),
@@ -155,20 +170,29 @@
       actionGap: clampNumber(merged.advanced.actionGap, DEFAULT_APPEARANCE.advanced.actionGap, 0, 36),
       groupStyles: normalizedGroupStyles
     };
-    const normalized = { mode, presetId, basic, advanced };
+    const normalized = { themeId, basic, advanced };
     return { appearance: normalized, warnings };
   }
 
-  function effectiveAppearance(input) {
+  function effectiveAppearance(input, options) {
     const { appearance } = normalizeAppearance(input);
-    const preset = PRESETS[appearance.presetId] || {};
+    const isThunderbirdDark = !!(options && options.isThunderbirdDark);
+    const themeId = appearance.themeId;
+    const followPresetId = isThunderbirdDark ? 'contrast_dark' : 'contrast_light';
+    let presetId = themeId;
+    if (themeId === 'follow_tb') {
+      presetId = followPresetId;
+    }
+    const preset = themeId === 'custom' ? {} : (PRESETS[presetId] || {});
     const mergedPreset = mergeAppearance(appearance, preset);
-    return normalizeAppearance(mergedPreset).appearance;
+    return normalizeAppearance({
+      ...mergedPreset,
+      themeId
+    }).appearance;
   }
 
   function toCssVariables(input, options) {
-    const appearance = effectiveAppearance(input);
-    const mode = appearance.mode;
+    const appearance = effectiveAppearance(input, options);
     const out = Object.create(null);
 
     out['--e2c-base-font-size'] = `${appearance.basic.baseFontSize}px`;
@@ -186,21 +210,16 @@
     out['--e2c-card-padding-x'] = `${appearance.advanced.cardPaddingX}px`;
     out['--e2c-card-gap'] = `${appearance.advanced.cardGap}px`;
     out['--e2c-action-gap'] = `${appearance.advanced.actionGap}px`;
-
-    if (mode !== 'follow_tb') {
-      out['--e2c-text-color'] = appearance.basic.textColor;
-      out['--e2c-module-bg'] = appearance.basic.moduleBg;
-      out['--e2c-button-bg'] = appearance.basic.buttonBg;
-      out['--e2c-button-text'] = appearance.basic.buttonText;
-      out['--e2c-group-title-color'] = appearance.advanced.groupTitleColor;
-      out['--e2c-item-title-color'] = appearance.advanced.itemTitleColor;
-      out['--e2c-meta-color'] = appearance.advanced.metaColor;
-      out['--e2c-status-color'] = appearance.advanced.statusColor;
-      out['--e2c-card-bg'] = appearance.advanced.cardBg;
-      out['--e2c-card-border'] = appearance.advanced.cardBorderColor;
-    }
-
-    void options;
+    out['--e2c-text-color'] = appearance.basic.textColor;
+    out['--e2c-module-bg'] = appearance.basic.moduleBg;
+    out['--e2c-button-bg'] = appearance.basic.buttonBg;
+    out['--e2c-button-text'] = appearance.basic.buttonText;
+    out['--e2c-group-title-color'] = appearance.advanced.groupTitleColor;
+    out['--e2c-item-title-color'] = appearance.advanced.itemTitleColor;
+    out['--e2c-meta-color'] = appearance.advanced.metaColor;
+    out['--e2c-status-color'] = appearance.advanced.statusColor;
+    out['--e2c-card-bg'] = appearance.advanced.cardBg;
+    out['--e2c-card-border'] = appearance.advanced.cardBorderColor;
     return out;
   }
 

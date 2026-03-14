@@ -1,5 +1,81 @@
 # Changelog
 
+## v3.0.1 - 2026-03-14
+
+### 用户问题
+- 用户指出当外观设置为“跟随 Thunderbird”时，第四栏仍然保持浅色，没有跟随 Thunderbird 的深浅色切换
+- 用户指出外观页里的“模式”和“预设主题”概念重复，容易误导用户
+- 用户指出 LLM 完成识别与分组后，本地规则关键词没有被更新
+
+### 讨论与决策摘要
+- 外观问题的根因是两层叠加：
+  - 外观模型使用 `mode + preset` 两套入口，概念重复
+  - `follow_tb` 并没有显式解析成 Thunderbird 当前的明暗主题结果
+- 本地规则问题的根因是关键词回写到分组定义时，分组映射过于依赖精确标签匹配
+- 决策是：
+  - 将外观配置收敛为单一 `themeId` 选择器
+  - 在 `follow_tb` 下根据 Thunderbird 当前深浅色显式解析为浅色或深色预设
+  - 在 panel 与 options 预览里监听 Thunderbird 深浅色变化并重刷外观
+  - 强化 LLM 事件到分组定义 id 的映射逻辑，再回写关键词到本地规则
+
+### 已做改动
+- 版本号升级到 `3.0.1`
+- `thunderbird-addon/common/appearance.js`
+  - 将外观主模型从 `mode + presetId` 收敛到单一 `themeId`
+  - 为旧版 `mode/presetId` 配置增加兼容迁移
+  - 在 `follow_tb` 下显式解析 `contrast_light / contrast_dark`
+  - 统一输出颜色变量，不再让 `follow_tb` 走“留空变量”路径
+- `thunderbird-addon/options/options.html`
+  - 外观顶部配置改为单一主题选择器
+  - 移除阻碍深色跟随的多处浅色硬编码背景
+- `thunderbird-addon/options/options.js`
+  - 外观配置改为围绕 `appearanceTheme` 收集与回显
+  - 监听 Thunderbird 深浅色变化，在 `follow_tb` 下重刷文档与预览
+- `thunderbird-addon/sidebar/panel.js`
+  - 监听 Thunderbird 深浅色变化，在 `follow_tb` 下重刷第四栏外观
+- `thunderbird-addon/background.js`
+  - 新增更稳健的 `resolveGroupDefinitionIdForEvent()`
+  - LLM 关键词回写改为先走精确标签匹配，再走 slug/归一化分组匹配
+  - 扫描结束状态文案加入本次更新的规则关键词数量
+- `tests/appearance-follow-thunderbird.test.mjs`
+  - 新增单一主题选择器与 Thunderbird 深色跟随回归测试
+- `tests/llm-keyword-writeback.test.mjs`
+  - 新增 LLM 关键词回写分组映射回归测试
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.1`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.1`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/common/appearance.js`
+- `thunderbird-addon/options/options.html`
+- `thunderbird-addon/options/options.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/background.js`
+- `tests/appearance-follow-thunderbird.test.mjs`
+- `tests/llm-keyword-writeback.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.1.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/appearance-follow-thunderbird.test.mjs`
+  - `node tests/llm-keyword-writeback.test.mjs`
+  - `node tests/options-appearance-modules.test.mjs`
+  - `node tests/options-nav-and-group-unification.test.mjs`
+  - `node tests/group-decision-colors.test.mjs`
+  - `node tests/mailpane-layout.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.0 - 2026-03-13
 
 ### 版本定位

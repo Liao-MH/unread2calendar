@@ -152,6 +152,9 @@ let vm = null;
 let mailPaneReadySent = false;
 let mailPaneFailureSent = false;
 let mailPaneLayoutSyncScheduled = false;
+const thunderbirdThemeQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+  ? window.matchMedia('(prefers-color-scheme: dark)')
+  : null;
 const PANEL_UI_STATE_KEY = 'todo.panel-ui-state.v1';
 const PANEL_WINDOW_STATE_KEY = 'todo.panel-window-state.v1';
 const PANEL_MIN_WIDTH = 560;
@@ -370,7 +373,9 @@ function format(templateKey, values) {
 function applyAppearance(appearance) {
   const api = globalThis.Unread2CalendarAppearance;
   if (!api) return;
-  const vars = api.toCssVariables(appearance || api.DEFAULT_APPEARANCE);
+  const vars = api.toCssVariables(appearance || api.DEFAULT_APPEARANCE, {
+    isThunderbirdDark: !!(thunderbirdThemeQuery && thunderbirdThemeQuery.matches)
+  });
   api.applyCssVariables(document.documentElement, vars);
 }
 
@@ -1387,6 +1392,18 @@ el.groups.addEventListener('scroll', () => {
 });
 window.addEventListener('beforeunload', saveUiState);
 window.addEventListener('resize', scheduleMailpaneLayoutSync);
+if (thunderbirdThemeQuery) {
+  const reapplyThunderbirdFollowAppearance = () => {
+    if (vm && vm.appearance && vm.appearance.themeId === 'follow_tb') {
+      applyAppearance(vm.appearance);
+    }
+  };
+  if (typeof thunderbirdThemeQuery.addEventListener === 'function') {
+    thunderbirdThemeQuery.addEventListener('change', reapplyThunderbirdFollowAppearance);
+  } else if (typeof thunderbirdThemeQuery.addListener === 'function') {
+    thunderbirdThemeQuery.addListener(reapplyThunderbirdFollowAppearance);
+  }
+}
 
 applyStaticText();
 loadUiState();

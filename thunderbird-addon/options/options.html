@@ -42,22 +42,22 @@
     .chip-input-row { display: flex; gap: 8px; margin-top: 6px; }
     .chip-input-row input { flex: 1; }
     label { font-weight: 600; color: var(--e2c-item-title-color); }
-    input, select, textarea { padding: 8px; border: 1px solid var(--e2c-card-border); border-radius: 8px; background: #fff; color: var(--e2c-text-color); }
+    input, select, textarea { padding: 8px; border: 1px solid var(--e2c-card-border); border-radius: 8px; background: var(--e2c-card-bg); color: var(--e2c-text-color); }
     input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
     button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--e2c-button-bg); background: var(--e2c-button-bg); color: var(--e2c-button-text); cursor: pointer; }
-    .minor-btn { border-color: var(--e2c-card-border); background: #fff; color: var(--e2c-text-color); }
+    .minor-btn { border-color: var(--e2c-card-border); background: var(--e2c-card-bg); color: var(--e2c-text-color); }
     #status, .section-status { margin-top: 12px; border: 1px solid var(--e2c-card-border); border-radius: 8px; padding: 8px; min-height: 20px; white-space: pre-wrap; color: var(--e2c-status-color); font-size: var(--e2c-status-size); }
     .toolbar { display:flex; gap:8px; flex-wrap:wrap; }
     .cols-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .appearance-advanced[hidden] { display: none; }
-    .help-text { margin-top: 2px; font-size: 11px; color: #6b7280; }
-    .subsection { border: 1px solid var(--e2c-card-border); border-radius: 10px; padding: 10px; margin-bottom: 10px; background: rgba(255,255,255,0.6); }
+    .help-text { margin-top: 2px; font-size: 11px; color: var(--e2c-meta-color); }
+    .subsection { border: 1px solid var(--e2c-card-border); border-radius: 10px; padding: 10px; margin-bottom: 10px; background: color-mix(in srgb, var(--e2c-card-bg) 86%, transparent); }
     .subsection h3 { margin: 0 0 8px; font-size: 14px; color: var(--e2c-group-title-color); }
     .subsection-desc { margin: 0 0 10px; color: var(--e2c-meta-color); font-size: 12px; }
     .settings-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 14px; align-items: start; }
     .settings-nav { position: sticky; top: 10px; border: 1px solid var(--e2c-card-border); border-radius: 10px; background: var(--e2c-card-bg); padding: 8px; display: grid; gap: 8px; }
-    .settings-nav button { border-color: var(--e2c-card-border); background: #fff; color: var(--e2c-text-color); text-align: left; }
-    .settings-nav button.active { border-color: var(--e2c-button-bg); background: color-mix(in srgb, var(--e2c-button-bg) 12%, #fff); }
+    .settings-nav button { border-color: var(--e2c-card-border); background: var(--e2c-card-bg); color: var(--e2c-text-color); text-align: left; }
+    .settings-nav button.active { border-color: var(--e2c-button-bg); background: color-mix(in srgb, var(--e2c-button-bg) 12%, var(--e2c-card-bg)); }
     .settings-page[hidden] { display: none; }
     .legacy-hidden { display: none; }
     .settings-page-save { margin: -4px 0 14px; }
@@ -259,27 +259,18 @@
 
         <div id="appearanceTopModule" class="subsection">
       <h3>顶部区域</h3>
-      <p class="subsection-desc">页面级视觉样式：主题模式、基础字体、按钮、模块背景。</p>
-      <div class="row cols-2">
-        <div class="row">
-          <label for="appearanceMode">模式（Mode）</label>
-          <select id="appearanceMode">
-            <option value="follow_tb">跟随 Thunderbird（默认）</option>
-            <option value="preset">使用预设主题</option>
-            <option value="custom">完全自定义</option>
-          </select>
-        </div>
-        <div class="row">
-          <label for="appearancePreset">预设主题（Preset）</label>
-          <select id="appearancePreset">
-            <option value="system">跟随系统</option>
-            <option value="contrast_light">高对比浅色</option>
-            <option value="contrast_dark">高对比深色</option>
-            <option value="soft_eye">护眼柔和</option>
-            <option value="academic_bluegray">学术蓝灰</option>
-            <option value="vibrant_orangegreen">活力橙绿</option>
-          </select>
-        </div>
+      <p class="subsection-desc">页面级视觉样式：主题、基础字体、按钮、模块背景。</p>
+      <div class="row">
+        <label for="appearanceTheme">主题（Theme）</label>
+        <select id="appearanceTheme">
+          <option value="follow_tb">跟随 Thunderbird（默认）</option>
+          <option value="contrast_light">高对比浅色</option>
+          <option value="contrast_dark">高对比深色</option>
+          <option value="soft_eye">护眼柔和</option>
+          <option value="academic_bluegray">学术蓝灰</option>
+          <option value="vibrant_orangegreen">活力橙绿</option>
+          <option value="custom">完全自定义</option>
+        </select>
       </div>
       <div class="row cols-2">
         <div class="row">
