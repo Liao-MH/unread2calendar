@@ -15,6 +15,12 @@ assert.match(optionsJs, /GROUP_ACCENT_PALETTE/, 'options should define non-repea
 assert.match(optionsJs, /function nextUniqueAccent\(/, 'options should support hybrid palette-and-hash color assignment');
 assert.match(optionsJs, /usedAccents\.has\(normalizedAccent\)/, 'options should reassign duplicate configured accents to unique defaults');
 assert.match(optionsJs, /function renderAppearancePreview\(/, 'options should render interactive appearance preview');
+assert.doesNotMatch(optionsJs, /state\.groupDefinitions\.slice\(0,\s*3\)/, 'appearance preview should not truncate to only three groups');
+assert.match(optionsJs, /const defs = Array\.isArray\(state\.groupDefinitions\) \? state\.groupDefinitions : \[\];/, 'appearance preview should render all configured groups');
+assert.match(optionsJs, /group\.style\.borderColor = style\.accent \|\| '#6b7280';/, 'appearance preview should tint group containers with the group accent');
+assert.match(optionsJs, /head\.style\.borderBottomColor = style\.accent \|\| '#6b7280';/, 'appearance preview should tint group headers with the group accent');
+assert.match(optionsJs, /if \(style\.bg\) \{\s*group\.style\.background = style\.bg;/, 'appearance preview should apply group background color to the whole preview group');
+assert.match(optionsJs, /if \(style\.bg\) \{\s*items\.style\.background = style\.bg;/, 'appearance preview should carry group background color into the preview item zone');
 assert.match(optionsJs, /chip\.draggable\s*=\s*true/, 'options should enable draggable chips for llm groups');
 assert.match(optionsJs, /addEventListener\('drop'/, 'options should handle drop reorder for llm groups');
 assert.match(optionsJs, /state\.groupDefinitions\.splice\(from, 1\)/, 'options should reorder group definitions on drop');

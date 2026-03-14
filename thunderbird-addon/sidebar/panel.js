@@ -288,7 +288,13 @@ function resolveGroupVisual(groupKey, appearance) {
   const key = String(groupKey || 'other');
   if (key === 'imported') {
     const neutral = toHex(parseColor(getComputedStyle(document.documentElement).getPropertyValue('--e2c-card-border'))) || '#d8dee7';
-    return { accent: neutral, bg: '', confirmText: pickReadableText(neutral) };
+    return {
+      accent: neutral,
+      bg: '',
+      surfaceBg: '',
+      headerBg: '',
+      confirmText: pickReadableText(neutral)
+    };
   }
   const appearanceStyles = appearance && appearance.advanced && appearance.advanced.groupStyles
     ? appearance.advanced.groupStyles
@@ -301,9 +307,14 @@ function resolveGroupVisual(groupKey, appearance) {
   const accentBase = toHex(parseColor(configured && configured.accent)) || fallbackAccent;
   const accent = uiIsDark() ? mixColor(accentBase, '#ffffff', 0.18) : mixColor(accentBase, '#000000', 0.08);
   const configuredBg = configured && configured.bg ? toHex(parseColor(configured.bg)) : '';
+  const baseCardBg = toHex(parseColor(getComputedStyle(document.documentElement).getPropertyValue('--e2c-card-bg'))) || '#ffffff';
+  const surfaceBg = configuredBg || mixColor(accent, baseCardBg, uiIsDark() ? 0.9 : 0.94);
+  const headerBg = configuredBg || mixColor(accent, baseCardBg, uiIsDark() ? 0.82 : 0.88);
   return {
     accent,
     bg: configuredBg || '',
+    surfaceBg,
+    headerBg,
     confirmText: pickReadableText(accent)
   };
 }
@@ -1000,6 +1011,8 @@ function renderSingleGroup(host, group) {
   const visual = resolveGroupVisual(group.key, vm && vm.appearance);
   container.style.setProperty('--group-accent', visual.accent);
   container.style.setProperty('--group-confirm-text', visual.confirmText);
+  container.style.setProperty('--group-bg', visual.surfaceBg || 'var(--e2c-card-bg)');
+  container.style.setProperty('--group-header-bg', visual.headerBg || 'transparent');
   if (visual.bg) {
     container.style.setProperty('--group-item-bg', visual.bg);
   } else {

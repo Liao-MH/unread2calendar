@@ -763,7 +763,7 @@ function syncGroupDerivedViews() {
 function renderAppearancePreview() {
   if (!appearancePreviewRoot) return;
   appearancePreviewRoot.textContent = '';
-  const defs = Array.isArray(state.groupDefinitions) ? state.groupDefinitions.slice(0, 3) : [];
+  const defs = Array.isArray(state.groupDefinitions) ? state.groupDefinitions : [];
   const groups = defs.length > 0 ? defs : [{ id: 'preview-default', label: currentLang() === 'zh' ? '示例分组' : 'Sample Group' }];
 
   const toolbar = document.createElement('div');
@@ -783,20 +783,34 @@ function renderAppearancePreview() {
     const style = state.appearanceGroupStyles[def.id] || { accent: '#6b7280', bg: '' };
     const group = document.createElement('div');
     group.className = 'preview-group';
+    group.style.borderColor = style.accent || '#6b7280';
+    if (style.bg) {
+      group.style.background = style.bg;
+    } else {
+      group.style.removeProperty('background');
+    }
     const head = document.createElement('div');
     head.className = 'preview-group-head';
+    head.style.borderBottomColor = style.accent || '#6b7280';
+    head.style.background = `color-mix(in srgb, ${style.accent || '#6b7280'} 10%, var(--e2c-card-bg))`;
     const title = document.createElement('span');
     title.textContent = `${def.label} 2`;
     const toggle = document.createElement('button');
     toggle.type = 'button';
     toggle.className = 'minor-btn';
     toggle.textContent = currentLang() === 'zh' ? '展开' : 'Expand';
+    toggle.style.borderColor = style.accent || '#6b7280';
     head.appendChild(title);
     head.appendChild(toggle);
     group.appendChild(head);
 
     const items = document.createElement('div');
     items.className = 'preview-items';
+    if (style.bg) {
+      items.style.background = style.bg;
+    } else {
+      items.style.removeProperty('background');
+    }
     const makeItem = (isCollapsed) => {
       const item = document.createElement('div');
       item.className = `preview-item${isCollapsed ? ' is-collapsed' : ''}`;

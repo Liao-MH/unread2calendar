@@ -370,12 +370,14 @@ button:disabled {
 }
 
 .group {
-  background: var(--e2c-card-bg);
-  border: 1px solid var(--e2c-card-border);
+  background: var(--group-bg, var(--e2c-card-bg));
+  border: 1px solid var(--group-accent, var(--e2c-card-border));
   border-radius: var(--e2c-card-radius);
   padding: var(--e2c-card-padding-y) var(--e2c-card-padding-x);
   box-shadow: var(--e2c-card-shadow);
   --group-accent: var(--e2c-button-bg);
+  --group-bg: var(--e2c-card-bg);
+  --group-header-bg: transparent;
   --group-item-bg: var(--e2c-card-bg);
   --group-confirm-text: var(--e2c-button-text);
 }
@@ -412,6 +414,11 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   gap: 6px;
+  margin: calc(var(--e2c-card-padding-y) * -1) calc(var(--e2c-card-padding-x) * -1) 0;
+  padding: var(--e2c-card-padding-y) var(--e2c-card-padding-x);
+  border-bottom: 1px solid var(--group-accent, var(--e2c-card-border));
+  background: var(--group-header-bg, transparent);
+  border-radius: calc(var(--e2c-card-radius) - 1px) calc(var(--e2c-card-radius) - 1px) 0 0;
 }
 
 .group-head-left {

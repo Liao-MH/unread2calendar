@@ -1,5 +1,63 @@
 # Changelog
 
+## v3.0.2 - 2026-03-14
+
+### 用户问题
+- 用户指出外观预览页只显示三个分组，无法反映完整分组配置
+- 用户指出部分外观颜色项修改后，在预览页或实际第四栏里看起来没有生效
+
+### 讨论与决策摘要
+- 根因确认有两处：
+  - `options` 外观预览在 `renderAppearancePreview()` 中被 `slice(0, 3)` 硬截断
+  - 分组色只部分应用到了事件卡片和确认按钮，没有完整应用到预览分组容器、预览分组头、真实第四栏分组容器和分组头
+- 决策是：
+  - 外观预览按当前全部分组完整渲染，保留滚动，不再裁剪
+  - 分组 `accent/bg` 同时驱动预览和真实第四栏的分组容器、分组头、事件卡片强调区，保证配置页和实际界面一致
+
+### 已做改动
+- 版本号升级到 `3.0.2`
+- `thunderbird-addon/options/options.js`
+  - 外观预览改为渲染全部分组，不再截断前三组
+  - 预览分组容器、分组头、预览项区域补齐分组强调色和背景色应用
+- `thunderbird-addon/sidebar/panel.js`
+  - 分组视觉令牌补充 `surfaceBg/headerBg`
+  - 真实第四栏分组容器新增组级背景和分组头背景写入
+- `thunderbird-addon/sidebar/panel.css`
+  - 分组容器边框和背景改为消费组级视觉变量
+  - 分组头新增组级边框与背景样式
+- `tests/options-groups-dnd-and-preview.test.mjs`
+  - 新增外观预览必须显示全部分组、并完整应用分组色的断言
+- `tests/group-decision-colors.test.mjs`
+  - 新增真实第四栏分组容器/分组头消费组级视觉变量的断言
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.2`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.2`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/options/options.js`
+- `thunderbird-addon/sidebar/panel.js`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/options-groups-dnd-and-preview.test.mjs`
+- `tests/group-decision-colors.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.2.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/options-groups-dnd-and-preview.test.mjs`
+  - `node tests/group-decision-colors.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.1 - 2026-03-14
 
 ### 用户问题
