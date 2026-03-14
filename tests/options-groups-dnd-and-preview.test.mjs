@@ -23,6 +23,12 @@ assert.match(optionsJs, /if \(style\.bg\) \{\s*group\.style\.background = style\
 assert.match(optionsJs, /if \(style\.bg\) \{\s*items\.style\.background = style\.bg;/, 'appearance preview should carry group background color into the preview item zone');
 assert.match(optionsHtml, /\.preview-group\s*\{[^}]*overflow:\s*hidden;/, 'appearance preview group containers should clip inner header and body to the card radius');
 assert.match(optionsHtml, /\.preview-item\s*\{[^}]*overflow:\s*hidden;/, 'appearance preview item cards should clip inner content to the card radius');
+assert.match(optionsHtml, /\.preview-group-head\s*\{[^}]*min-width:\s*0;/, 'appearance preview group headers should allow inner text to shrink instead of overflowing');
+assert.match(optionsHtml, /\.preview-group-head\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto;/, 'appearance preview group headers should reserve space for title and toggle without overlap');
+assert.match(optionsHtml, /\.preview-item-title\s*\{[^}]*overflow-wrap:\s*anywhere;/, 'appearance preview titles should wrap instead of being visually clipped');
+assert.match(optionsHtml, /\.preview-item-meta\s*\{[^}]*overflow-wrap:\s*anywhere;/, 'appearance preview meta text should wrap instead of being visually clipped');
+assert.match(optionsJs, /items\.appendChild\(makeItem\(false\)\);/, 'appearance preview items should default to expanded so time and location remain visible');
+assert.match(optionsJs, /状态：示例预览，单击事件可展开\/收起。/, 'appearance preview footer should still explain click-to-collapse behavior');
 assert.match(optionsJs, /chip\.draggable\s*=\s*true/, 'options should enable draggable chips for llm groups');
 assert.match(optionsJs, /addEventListener\('drop'/, 'options should handle drop reorder for llm groups');
 assert.match(optionsJs, /state\.groupDefinitions\.splice\(from, 1\)/, 'options should reorder group definitions on drop');

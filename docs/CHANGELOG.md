@@ -1,5 +1,55 @@
 # Changelog
 
+## v3.0.6 - 2026-03-14
+
+### 用户问题
+- 用户指出主窗口预览显示异常，并补充要求预览窗口中也应该显示时间和地点
+
+### 讨论与决策摘要
+- 根因是上一轮圆角裁切修复后，预览端的分组头部和卡片内容没有保留足够的显示空间，导致标题与按钮被压缩；同时示例卡片默认处于折叠态，时间和地点被隐藏
+- 决策是：
+  - 优先恢复预览内容完整显示
+  - 保留外层容器负责圆角的模型
+  - 调整预览头部布局，让标题和“展开”按钮不再互相挤压
+  - 让示例卡片默认展开，确保时间和地点在预览里可见
+
+### 已做改动
+- 版本号升级到 `3.0.6`
+- `thunderbird-addon/options/options.html`
+  - 预览分组头部改为 `grid-template-columns: minmax(0, 1fr) auto`
+  - 分组标题、卡片标题、时间和地点都允许换行，避免被裁切
+  - 预览操作按钮区允许换行，避免在窄宽度下压坏布局
+- `thunderbird-addon/options/options.js`
+  - 示例预览卡片默认改为展开，时间和地点默认可见
+- `tests/options-groups-dnd-and-preview.test.mjs`
+  - 新增断言，要求预览头部为标题和按钮保留独立列
+  - 新增断言，要求预览标题、时间、地点可换行显示
+  - 新增断言，要求示例卡片默认展开
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.6`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.6`
+
+### 影响文件
+- `thunderbird-addon/options/options.html`
+- `thunderbird-addon/options/options.js`
+- `tests/options-groups-dnd-and-preview.test.mjs`
+- `tests/release-version.test.mjs`
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.6.xpi`
+
+### 验证结果
+- `node tests/options-groups-dnd-and-preview.test.mjs`
+- `node tests/release-version.test.mjs`
+- `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- `git diff --check`
+- `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.5 - 2026-03-14
 
 ### 用户问题
