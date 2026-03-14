@@ -21,6 +21,8 @@ assert.match(optionsJs, /group\.style\.borderColor = style\.accent \|\| '#6b7280
 assert.match(optionsJs, /head\.style\.borderBottomColor = style\.accent \|\| '#6b7280';/, 'appearance preview should tint group headers with the group accent');
 assert.match(optionsJs, /if \(style\.bg\) \{\s*group\.style\.background = style\.bg;/, 'appearance preview should apply group background color to the whole preview group');
 assert.match(optionsJs, /if \(style\.bg\) \{\s*items\.style\.background = style\.bg;/, 'appearance preview should carry group background color into the preview item zone');
+assert.match(optionsHtml, /\.preview-group\s*\{[^}]*overflow:\s*hidden;/, 'appearance preview group containers should clip inner header and body to the card radius');
+assert.match(optionsHtml, /\.preview-item\s*\{[^}]*overflow:\s*hidden;/, 'appearance preview item cards should clip inner content to the card radius');
 assert.match(optionsJs, /chip\.draggable\s*=\s*true/, 'options should enable draggable chips for llm groups');
 assert.match(optionsJs, /addEventListener\('drop'/, 'options should handle drop reorder for llm groups');
 assert.match(optionsJs, /state\.groupDefinitions\.splice\(from, 1\)/, 'options should reorder group definitions on drop');

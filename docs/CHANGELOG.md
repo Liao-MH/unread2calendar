@@ -1,5 +1,59 @@
 # Changelog
 
+## v3.0.5 - 2026-03-14
+
+### 用户问题
+- 用户指出外观预览窗口和实际第四栏窗口的分组卡片、事件卡片圆角显示不正确
+
+### 讨论与决策摘要
+- 根因不是缺少 `border-radius`，而是圆角责任分散在多层：外层边框有圆角，但内部头部/内容区没有统一被外层裁切
+- 决策是把圆角责任收敛到外层容器：
+  - 预览和真实面板的分组卡片都由外层容器负责形状和裁切
+  - 事件卡片也由外层容器负责形状和裁切
+  - 内层头部区域不再单独持有额外圆角
+
+### 已做改动
+- 版本号升级到 `3.0.5`
+- `thunderbird-addon/options/options.html`
+  - 预览分组卡片和事件卡片增加 `overflow: hidden`
+  - 预览卡片增加 `background-clip: padding-box`，防止内部背景破坏圆角轮廓
+- `thunderbird-addon/sidebar/panel.css`
+  - 真实第四栏的分组卡片和事件卡片增加 `overflow: hidden`
+  - 分组头部移除独立圆角，改由外层容器统一裁切
+  - 事件卡片圆角统一改为 `var(--e2c-card-radius)`，与可配置圆角保持一致
+- `tests/options-groups-dnd-and-preview.test.mjs`
+  - 新增断言，要求预览分组和事件卡片由外层容器负责裁切
+- `tests/group-decision-colors.test.mjs`
+  - 新增断言，要求真实面板分组和事件卡片由外层容器负责裁切
+  - 新增断言，要求分组头部不再自持额外圆角
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.5`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.5`
+
+### 影响文件
+- `thunderbird-addon/options/options.html`
+- `thunderbird-addon/sidebar/panel.css`
+- `tests/options-groups-dnd-and-preview.test.mjs`
+- `tests/group-decision-colors.test.mjs`
+- `tests/release-version.test.mjs`
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.5.xpi`
+
+### 验证结果
+- `node tests/options-groups-dnd-and-preview.test.mjs`
+- `node tests/group-decision-colors.test.mjs`
+- `node tests/appearance-follow-thunderbird.test.mjs`
+- `node tests/release-version.test.mjs`
+- `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- `git diff --check`
+- `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.4 - 2026-03-14
 
 ### 用户问题

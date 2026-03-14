@@ -23,9 +23,12 @@ assert.match(appearanceJs, /groupStyles:\s*normalizedGroupStyles/, 'appearance n
 assert.match(panelCss, /\.group \.item-actions \.primary \{/, 'panel css should style primary action button by group variables');
 assert.match(panelCss, /\.group\s*\{[\s\S]*border: 1px solid var\(--group-accent, var\(--e2c-card-border\)\);/, 'panel css should expose group container borders through group accent variables');
 assert.match(panelCss, /\.group\s*\{[\s\S]*background: var\(--group-bg, var\(--e2c-card-bg\)\);/, 'panel css should expose group container backgrounds through group background variables');
+assert.match(panelCss, /\.group\s*\{[\s\S]*overflow:\s*hidden;/, 'panel group containers should clip inner regions to the card radius');
 assert.match(panelCss, /\.group-header\s*\{[\s\S]*border-bottom: 1px solid var\(--group-accent, var\(--e2c-card-border\)\);/, 'panel css should tint group headers with the group accent');
 assert.match(panelCss, /\.group-header\s*\{[\s\S]*background: var\(--group-header-bg, transparent\);/, 'panel css should expose group-header background variables');
-assert.match(panelCss, /border: 1px solid var\(--group-accent/, 'panel css should bind item border to group accent');
+assert.doesNotMatch(panelCss, /\.group-header\s*\{[^}]*border-radius:/, 'panel group headers should not own a separate radius once the outer group clips content');
+assert.match(panelCss, /\.item\s*\{[\s\S]*border: 1px solid var\(--group-accent/, 'panel css should bind item border to group accent');
+assert.match(panelCss, /\.item\s*\{[\s\S]*overflow:\s*hidden;/, 'panel item cards should clip inner content to the card radius');
 assert.match(panelJs, /function resolveGroupVisual\(groupKey, appearance\)/, 'panel should resolve group visual tokens');
 assert.match(panelJs, /container\.style\.setProperty\('--group-accent'/, 'panel should write group accent style per group');
 assert.match(panelJs, /container\.style\.setProperty\('--group-bg'/, 'panel should write group container background styles per group');
