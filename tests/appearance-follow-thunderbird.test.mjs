@@ -19,6 +19,8 @@ assert.match(optionsJs, /state\.appearance && state\.appearance\.themeId === 'fo
 assert.doesNotMatch(optionsJs, /appearanceTheme\.value = 'custom'/, 'editing appearance fields should not force-switch the selected theme to custom');
 assert.match(optionsJs, /type:\s*'todo:preview-appearance'/, 'options should push unsaved live appearance previews to the panel');
 assert.match(optionsJs, /type:\s*'todo:clear-appearance-preview'/, 'options should clear unsaved panel previews when needed');
+assert.doesNotMatch(optionsJs, /node\.type === 'color' \? 'change'/, 'appearance color inputs should not wait for change events');
+assert.match(optionsJs, /node\.type === 'color' \? 'input' : 'input'/, 'appearance color inputs should preview continuously while dragging');
 
 assert.match(panelJs, /window\.matchMedia\('\(prefers-color-scheme: dark\)'\)/, 'panel should observe Thunderbird dark-mode changes');
 assert.match(panelJs, /currentAppearance\(\) && currentAppearance\(\)\.themeId === 'follow_tb'/, 'panel should only live-reapply when appearance follows Thunderbird');

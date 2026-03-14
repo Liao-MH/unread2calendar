@@ -1,5 +1,51 @@
 # Changelog
 
+## v3.0.4 - 2026-03-14
+
+### 用户问题
+- 用户指出修改字体颜色或其他全局颜色时，不能像固定分组配色一样连续实时预览
+
+### 讨论与决策摘要
+- 根因是外观页共享绑定规则里，`type="color"` 统一使用了 `change`
+- 固定分组配色因为单独绑定了 `input`，所以能连续预览；全局颜色项则必须等到颜色面板确认后才更新
+- 决策是：
+  - 不新增第二套监听逻辑
+  - 直接统一共享绑定规则，让所有外观 `type="color"` 控件都改用 `input`
+  - 保持固定分组颜色和全局颜色的实时预览行为一致
+
+### 已做改动
+- 版本号升级到 `3.0.4`
+- `thunderbird-addon/options/options.js`
+  - 外观颜色输入统一改为 `input` 事件
+  - 字体颜色、按钮颜色、背景色、边框色等全局颜色项现在会像固定分组颜色一样连续实时预览
+- `tests/appearance-follow-thunderbird.test.mjs`
+  - 新增断言，要求外观颜色输入不再等待 `change`
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.4`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.4`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `thunderbird-addon/options/options.js`
+- `tests/appearance-follow-thunderbird.test.mjs`
+- `tests/release-version.test.mjs`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.4.xpi`
+
+### 验证结果
+- 关键回归测试通过：
+  - `node tests/appearance-follow-thunderbird.test.mjs`
+  - `node tests/appearance-theme-overrides.test.mjs`
+- 全量测试通过：
+  - `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- 打包通过：
+  - `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.3 - 2026-03-14
 
 ### 用户问题

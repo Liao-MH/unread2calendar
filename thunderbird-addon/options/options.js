@@ -1984,11 +1984,9 @@ if (thunderbirdThemeQuery) {
   appearanceGroupAccentUnrecognized,
   appearanceGroupBgUnrecognized
 ].forEach((node) => {
-  // Use "change" for color pickers to avoid sticky picker dialogs and
-  // apply update after user confirms selection.
   const eventName = node.type === 'checkbox'
     ? 'change'
-    : (node.type === 'color' ? 'change' : 'input');
+    : (node.type === 'color' ? 'input' : 'input');
   node.addEventListener(eventName, onAppearanceChanged);
 });
 
