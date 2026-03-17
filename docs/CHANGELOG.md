@@ -1,5 +1,45 @@
 # Changelog
 
+## v4.0.0 - 2026-03-17
+
+### 发布定位
+- 将当前 Thunderbird 插件稳定基线正式提升为 `4.0.0`
+- 这一版不是单一功能增量，而是对 `v3.0.0` 之后整轮 UI、外观、预览、分组关键词回写和 mailpane 行为改进的稳定发布
+
+### 关键结果
+- 外观系统升级
+  - 外观配置支持跟随 Thunderbird 深浅色
+  - 主题与覆盖层可同时生效，任意主题下都能继续实时预览和微调
+  - 主窗口预览结构已对齐真实第四栏，包括提示条、空状态、滚动分组区和底部区域
+- mailpane 行为稳定化
+  - 点击插件按钮会重建第四栏宿主，重新适应当前宽高
+  - 第四栏最小宽度和工具栏换行行为已重新梳理
+- 分组与卡片视觉修正
+  - 预览和真实面板的卡片圆角裁切已统一
+  - 深色主题下提示条可读性已修复
+  - 预览中分组过多时改为稳定滚动，不再被压缩成一团
+- LLM 识别结果回写加固
+  - “扫描未读”和“刷新单封邮件”共用统一关键词回写链
+  - 兼容更多关键词字段与顶层分组映射结构，减少模型返回格式轻微变化导致的静默失效
+
+### 版本与发布文件
+- 版本号升级到 `4.0.0`
+- 发布包路径：
+  - `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-4.0.0.xpi`
+
+### 影响文件
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+- `tests/release-version.test.mjs`
+
+### 验证结果
+- `node tests/release-version.test.mjs`
+- `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- `git diff --check`
+- `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.9 - 2026-03-17
 
 ### 用户问题
