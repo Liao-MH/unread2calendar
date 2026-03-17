@@ -1246,6 +1246,24 @@ function isImportantGroupLabel(label) {
   return src === normalizeText(labels.important).toLowerCase() || src === 'important' || src === 'possibly important' || src === '可能重要的事';
 }
 
+function extractLlmKeywordPayload(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  return raw.categoryKeywords
+    || raw.category_keywords
+    || raw.classificationKeywords
+    || raw.classification_keywords
+    || raw.reasonKeywords
+    || raw.reason_keywords
+    || raw.groupKeywords
+    || raw.group_keywords
+    || raw.keywords
+    || raw.keywordList
+    || raw.keyword_list
+    || raw.tags
+    || raw.reasons
+    || null;
+}
+
 function sanitizeSingleEvent(raw, message, allowedGroups, fallbackTimeZone) {
   if (!raw || typeof raw !== 'object') return null;
   const rawKind = normalizeText(raw.kind).toLowerCase();
@@ -1259,9 +1277,7 @@ function sanitizeSingleEvent(raw, message, allowedGroups, fallbackTimeZone) {
   const startText = displayTime || formatDisplayTimeRange(raw.startISO || raw.startText, raw.endISO || raw.endText, sourceTz, fallbackTimeZone);
   const endText = normalizeText(raw.endText || raw.endISO);
   const confidenceNum = Number(raw.confidence);
-  const categoryKeywords = normalizeLlmKeywordList(
-    raw.categoryKeywords || raw.classificationKeywords || raw.reasonKeywords || raw.groupKeywords
-  );
+  const categoryKeywords = normalizeLlmKeywordList(extractLlmKeywordPayload(raw));
 
   return {
     kind: isImportant ? 'important' : kind,
@@ -1284,6 +1300,109 @@ function normalizeLlmKeywordList(raw) {
   if (!text) return [];
   const parts = text.split(/[，,、;；|]/).map((item) => normalizeText(item)).filter(Boolean);
   return normalizeKeywordArray(parts);
+}
+
+function normalizeKeywordWritebackEntry(rawEntry, fallbackKey, allowedGroups) {
+  const raw = rawEntry && typeof rawEntry === 'object' ? rawEntry : {};
+  const keywords = normalizeLlmKeywordList(
+    Array.isArray(rawEntry)
+      ? rawEntry
+      : (rawEntry && typeof rawEntry === 'object'
+        ? extractLlmKeywordPayload(rawEntry)
+        : rawEntry)
+  );
+  if (keywords.length === 0) {
+    const fallbackKeywords = normalizeLlmKeywordList(
+      raw.values
+      || raw.items
+      || raw.list
+      || raw.keywordValues
+      || raw.keyword_values
+    );
+    if (fallbackKeywords.length > 0) {
+      keywords.push(...fallbackKeywords);
+    }
+  }
+  if (keywords.length === 0) return null;
+
+  const fallback = normalizeText(fallbackKey);
+  const fallbackLooksLikeKey = /^(?:llm-|grp-)/.test(fallback) || GROUP_KEYS.includes(fallback);
+  const group = normalizeText(
+    raw.group
+    || raw.groupId
+    || raw.groupID
+    || raw.groupKey
+    || raw.group_key
+    || raw.definitionId
+    || raw.definition_id
+    || raw.id
+    || (fallbackLooksLikeKey ? fallback : '')
+  );
+  const rawLabel = normalizeText(
+    raw.groupLabel
+    || raw.group_label
+    || raw.label
+    || raw.name
+    || raw.title
+    || (!fallbackLooksLikeKey ? fallback : '')
+  );
+  const groupLabel = rawLabel ? (resolveAllowedGroupLabel(rawLabel, allowedGroups) || rawLabel) : '';
+  return { group, groupLabel, keywords };
+}
+
+function collectKeywordWritebackEntries(parsed, events, allowedGroups) {
+  const out = [];
+  for (const event of events || []) {
+    const entry = normalizeKeywordWritebackEntry({
+      group: event && event.group,
+      groupLabel: event && event.groupLabel,
+      categoryKeywords: event && event.categoryKeywords
+    }, '', allowedGroups);
+    if (entry) out.push(entry);
+  }
+
+  if (!parsed || typeof parsed !== 'object') return out;
+  const topLevelKeys = [
+    'groupKeywordsMap',
+    'groupKeywordMap',
+    'group_keyword_map',
+    'categoryKeywordsByGroup',
+    'category_keywords_by_group',
+    'classificationKeywordsByGroup',
+    'classification_keywords_by_group',
+    'reasonKeywordsByGroup',
+    'reason_keywords_by_group',
+    'keywordGroups',
+    'keyword_groups',
+    'groupKeywordEntries',
+    'group_keyword_entries'
+  ];
+
+  for (const key of topLevelKeys) {
+    const source = parsed[key];
+    if (!source) continue;
+    if (Array.isArray(source)) {
+      for (const item of source) {
+        const entry = normalizeKeywordWritebackEntry(item, '', allowedGroups);
+        if (entry) out.push(entry);
+      }
+      continue;
+    }
+    if (typeof source === 'object') {
+      for (const [groupKey, value] of Object.entries(source)) {
+        const entry = normalizeKeywordWritebackEntry(value, groupKey, allowedGroups);
+        if (entry) out.push(entry);
+      }
+    }
+  }
+
+  if (Array.isArray(parsed.groups)) {
+    for (const group of parsed.groups) {
+      const entry = normalizeKeywordWritebackEntry(group, '', allowedGroups);
+      if (entry) out.push(entry);
+    }
+  }
+  return out;
 }
 
 function resolveGroupDefinitionIdByLabel(groupLabel, groupDefinitions) {
@@ -1321,15 +1440,26 @@ function resolveGroupDefinitionIdForEvent(event, groupDefinitions) {
   return '';
 }
 
-function mergeLlmKeywordsIntoLocalRules(localRulesInput, groupDefinitions, events) {
+function mergeLlmKeywordsIntoLocalRules(localRulesInput, groupDefinitions, entries) {
   const localRules = normalizeLocalRules(localRulesInput || {});
   let changed = false;
   let addedCount = 0;
-  for (const event of events || []) {
-    const keywords = normalizeLlmKeywordList(event && event.categoryKeywords);
+  for (const entry of entries || []) {
+    const keywords = normalizeLlmKeywordList(
+      entry && typeof entry === 'object'
+        ? (entry.categoryKeywords || entry.keywords || extractLlmKeywordPayload(entry))
+        : entry
+    );
     if (keywords.length === 0) continue;
-    const groupId = resolveGroupDefinitionIdForEvent(event, groupDefinitions);
-    const fallbackGroupKey = normalizeText(event && event.group);
+    const groupId = resolveGroupDefinitionIdForEvent(entry, groupDefinitions);
+    const fallbackGroupKey = normalizeText(
+      entry && (
+        entry.group
+        || entry.groupId
+        || entry.groupKey
+        || entry.definitionId
+      )
+    );
     const targetKey = groupId || fallbackGroupKey;
     if (!targetKey) continue;
     const existing = Array.isArray(localRules.groupKeywords[targetKey]) ? localRules.groupKeywords[targetKey] : [];
@@ -1376,6 +1506,7 @@ function fallbackNonTodoSummary(message) {
 function normalizeLLMResponse(parsed, messagePayload, allowedGroups, fallbackTimeZone) {
   const events = sanitizeLLMEventsResult(parsed, messagePayload, allowedGroups, fallbackTimeZone)
     .filter((event) => event && event.kind !== 'ignore');
+  const keywordWritebackEntries = collectKeywordWritebackEntries(parsed, events, allowedGroups);
   let nonTodoSummary = '';
   if (parsed && typeof parsed === 'object' && parsed.nonTodo && typeof parsed.nonTodo === 'object') {
     nonTodoSummary = normalizeText(parsed.nonTodo.summary);
@@ -1385,6 +1516,7 @@ function normalizeLLMResponse(parsed, messagePayload, allowedGroups, fallbackTim
   }
   return {
     events,
+    keywordWritebackEntries,
     nonTodoSummary
   };
 }
@@ -2428,11 +2560,14 @@ async function extractFromMessages(messages, options) {
 
         const validEvents = (Array.isArray(llmResult.events) ? llmResult.events : [])
           .filter((ev) => ev && ev.kind !== 'ignore');
+        const keywordWritebackEntries = Array.isArray(llmResult.keywordWritebackEntries)
+          ? llmResult.keywordWritebackEntries
+          : validEvents;
         if (validEvents.length > 0) {
           const mergedKeywords = mergeLlmKeywordsIntoLocalRules(
             llmRuleKeywordsState,
             settings.groupDefinitions || [],
-            validEvents
+            keywordWritebackEntries
           );
           if (mergedKeywords.changed) {
             llmRuleKeywordsState = mergedKeywords.localRules;

@@ -1,5 +1,58 @@
 # Changelog
 
+## v3.0.9 - 2026-03-17
+
+### 用户问题
+- 用户指出 LLM 识别分组使用的关键词不会再自动更新到本地规则，且该问题同时出现在“扫描未读”和“刷新单封邮件”路径
+
+### 讨论与决策摘要
+- 这次不做单点补丁，而是完整检查了“Prompt -> 解析 -> 分组映射 -> 保存 -> 测试”整条关键词回写链
+- 确认的根因有三类：
+  - 事件解析只接受过窄的关键词字段，`keywords`、`tags` 等别名会被直接丢掉
+  - 关键词归并只读取 `categoryKeywords`，即使前面已经拿到归一化关键词，其他入口仍可能被忽略
+  - 顶层/分组级关键词映射（例如 `groupKeywordMap`）没有被纳入回写管线
+- 决策是把关键词回写改成“多来源提取 + 统一归并”：
+  - 扩大事件级关键词字段兼容范围
+  - 新增顶层/分组级关键词入口收集
+  - 统一通过稳健的分组解析器归并到本地规则
+  - 用运行时行为测试覆盖真实输入输出，而不是只做源码字符串断言
+
+### 已做改动
+- 版本号升级到 `3.0.9`
+- `thunderbird-addon/background.js`
+  - 新增 `extractLlmKeywordPayload()`，统一兼容 `categoryKeywords`、`classificationKeywords`、`reasonKeywords`、`groupKeywords`、`keywords`、`tags` 等关键词字段
+  - 新增 `normalizeKeywordWritebackEntry()` 和 `collectKeywordWritebackEntries()`，收集顶层/分组级关键词映射
+  - `sanitizeSingleEvent()` 改为复用统一关键词提取逻辑，避免事件级别丢关键词
+  - `mergeLlmKeywordsIntoLocalRules()` 改为接受统一归一化 entry，而不再只依赖 `categoryKeywords`
+  - 公共提取流程优先使用 `llmResult.keywordWritebackEntries`，因此“扫描未读”和“刷新单封邮件”共用同一条稳健回写链
+- `tests/llm-keyword-writeback.test.mjs`
+  - 从简单字符串断言升级为运行时行为测试
+  - 直接执行 `background.js` 中的关键词解析/归并辅助函数
+  - 覆盖事件级关键词别名、顶层分组关键词映射、`llm-` 前缀分组归并以及公共流程接线
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.9`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.9`
+
+### 影响文件
+- `thunderbird-addon/background.js`
+- `tests/llm-keyword-writeback.test.mjs`
+- `tests/release-version.test.mjs`
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.9.xpi`
+
+### 验证结果
+- `node tests/llm-keyword-writeback.test.mjs`
+- `node tests/release-version.test.mjs`
+- `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- `git diff --check`
+- `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.8 - 2026-03-17
 
 ### 用户问题
