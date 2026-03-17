@@ -73,12 +73,12 @@
     .preview-taskbar button { font-size: 11px; padding: 4px 6px; }
     .preview-hint { border-radius: 8px; padding: 8px; background: #fff8de; border: 1px solid #efd37a; color: #7c4a03; font-size: 12px; }
     .preview-empty { margin: 0 4px; font-size: var(--e2c-meta-size); color: #8b95a7; overflow-wrap: anywhere; }
-    .preview-groups { min-height: 0; overflow: auto; display: grid; gap: var(--e2c-group-gap); align-content: start; padding-right: 2px; }
-    .preview-group { border: 1px solid var(--e2c-card-border); border-radius: var(--e2c-card-radius); background: var(--e2c-card-bg); overflow: hidden; background-clip: padding-box; }
+    .preview-groups { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: var(--e2c-group-gap); align-items: stretch; padding-right: 2px; }
+    .preview-group { flex: 0 0 auto; border: 1px solid var(--e2c-card-border); border-radius: var(--e2c-card-radius); background: var(--e2c-card-bg); overflow: hidden; background-clip: padding-box; }
     .preview-group-head { padding: 8px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; min-width: 0; font-size: 12px; color: var(--e2c-group-title-color); font-weight: 700; border-bottom: 1px solid var(--e2c-card-border); }
     .preview-group-head > span { min-width: 0; overflow-wrap: anywhere; }
     .preview-group-head > button { align-self: start; justify-self: end; }
-    .preview-items { display: grid; gap: var(--e2c-event-gap); padding: 8px; min-width: 0; }
+    .preview-items { display: flex; flex-direction: column; gap: var(--e2c-event-gap); padding: 8px; min-width: 0; }
     .preview-item { border: 1px solid var(--e2c-card-border); border-radius: var(--e2c-card-radius); background: var(--e2c-card-bg); padding: var(--e2c-card-padding-y) var(--e2c-card-padding-x); cursor: pointer; min-height: var(--e2c-card-min-height); box-shadow: var(--e2c-card-shadow); display: grid; gap: var(--e2c-card-gap); overflow: hidden; background-clip: padding-box; }
     .preview-item-title { min-width: 0; font-size: var(--e2c-item-title-size); font-weight: var(--e2c-title-weight); color: var(--e2c-item-title-color); overflow-wrap: anywhere; }
     .preview-item-meta { margin-top: 0; min-width: 0; font-size: var(--e2c-meta-size); color: var(--e2c-meta-color); overflow-wrap: anywhere; }

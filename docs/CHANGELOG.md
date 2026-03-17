@@ -1,5 +1,53 @@
 # Changelog
 
+## v3.0.8 - 2026-03-17
+
+### 用户问题
+- 用户指出主窗口预览中的分组卡片依旧被挤在一起，没有像真实窗口那样在中间区域滚动浏览完整内容
+
+### 讨论与决策摘要
+- 上一版虽然给预览加了独立滚动区，但仍让分组区使用 `grid` 承载大量分组示例，在分组数量继续增加时，预览仍可能出现视觉压缩
+- 决策是直接改成不可收缩的纵向滚动列表：
+  - 预览分组区改用 `flex` 纵向列表
+  - 每个预览分组显式 `flex: 0 0 auto`，禁止被压扁
+  - 每个分组只保留一张展开的示例卡片，减少无效重复内容，保证滚动浏览稳定
+
+### 已做改动
+- 版本号升级到 `3.0.8`
+- `thunderbird-addon/options/options.html`
+  - `preview-groups` 改为纵向 `flex` 滚动列表
+  - `preview-group` 显式设置 `flex: 0 0 auto`，防止分组数量增多时被压缩
+  - `preview-items` 改为纵向 `flex` 容器，避免示例项继续触发网格压缩
+- `thunderbird-addon/options/options.js`
+  - 每个分组的示例卡片从 2 张收敛为 1 张，保留标题、时间、地点和操作按钮
+- `tests/options-groups-dnd-and-preview.test.mjs`
+  - 新增断言，要求预览分组区为不可收缩的纵向滚动列表
+  - 新增断言，要求预览分组卡片显式禁止收缩
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.8`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.8`
+
+### 影响文件
+- `thunderbird-addon/options/options.html`
+- `thunderbird-addon/options/options.js`
+- `tests/options-groups-dnd-and-preview.test.mjs`
+- `tests/release-version.test.mjs`
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.8.xpi`
+
+### 验证结果
+- `node tests/options-groups-dnd-and-preview.test.mjs`
+- `node tests/release-version.test.mjs`
+- `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- `git diff --check`
+- `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.7 - 2026-03-17
 
 ### 用户问题

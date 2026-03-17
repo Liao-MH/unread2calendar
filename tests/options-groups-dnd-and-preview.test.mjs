@@ -12,7 +12,7 @@ assert.match(optionsHtml, /id="appearanceActionGap"/, 'options should expose ind
 assert.match(optionsHtml, /事件卡片间距/, 'options should name event gap as card-to-card spacing');
 assert.match(optionsHtml, /\.preview-frame\s*\{[^}]*grid-template-rows:\s*auto\s+auto\s+auto\s+minmax\(0,\s*1fr\)\s+auto\s+auto\s+auto;/, 'appearance preview should mirror the main panel shell with a dedicated scrollable middle row');
 assert.match(optionsHtml, /\.preview-frame\s*\{[^}]*overflow:\s*hidden;/, 'appearance preview shell should keep scrolling inside the middle groups area');
-assert.match(optionsHtml, /\.preview-groups\s*\{[^}]*overflow:\s*auto;/, 'appearance preview should expose a dedicated scrollable groups area');
+assert.match(optionsHtml, /\.preview-groups\s*\{[^}]*overflow:\s*auto;[^}]*display:\s*flex;[^}]*flex-direction:\s*column;/, 'appearance preview should expose a dedicated non-compressing scrollable groups list');
 assert.match(optionsHtml, /\.preview-hint\s*\{[^}]*color:\s*#7c4a03;/, 'appearance preview hint should keep high-contrast text');
 assert.match(optionsHtml, /\.preview-empty\s*\{[^}]*color:\s*#8b95a7;/, 'appearance preview should expose the empty-state line styling');
 
@@ -36,6 +36,7 @@ assert.match(optionsHtml, /\.preview-group-head\s*\{[^}]*min-width:\s*0;/, 'appe
 assert.match(optionsHtml, /\.preview-group-head\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto;/, 'appearance preview group headers should reserve space for title and toggle without overlap');
 assert.match(optionsHtml, /\.preview-item-title\s*\{[^}]*overflow-wrap:\s*anywhere;/, 'appearance preview titles should wrap instead of being visually clipped');
 assert.match(optionsHtml, /\.preview-item-meta\s*\{[^}]*overflow-wrap:\s*anywhere;/, 'appearance preview meta text should wrap instead of being visually clipped');
+assert.match(optionsHtml, /\.preview-group\s*\{[^}]*flex:\s*0 0 auto;/, 'appearance preview groups should not shrink when the list grows');
 assert.match(optionsJs, /items\.appendChild\(makeItem\(false\)\);/, 'appearance preview items should default to expanded so time and location remain visible');
 assert.match(optionsJs, /状态：Ready\./, 'appearance preview footer should mirror the real panel status line');
 assert.match(optionsJs, /chip\.draggable\s*=\s*true/, 'options should enable draggable chips for llm groups');

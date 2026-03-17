@@ -881,7 +881,6 @@ function renderAppearancePreview() {
       return item;
     };
     items.appendChild(makeItem(false));
-    items.appendChild(makeItem(false));
     group.appendChild(items);
 
     toggle.addEventListener('click', () => {

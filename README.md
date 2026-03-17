@@ -55,9 +55,9 @@
 当前仓库打包产物目录：`dist/`
 
 例如当前版本：
-- `dist/unread2calendar-thunderbird-3.0.7.xpi`
+- `dist/unread2calendar-thunderbird-3.0.8.xpi`
 - Release 直链下载（发布后）：
-  - `https://github.com/Liao-MH/unread2calendar/releases/download/v3.0.7/unread2calendar-thunderbird-3.0.7.xpi`
+  - `https://github.com/Liao-MH/unread2calendar/releases/download/v3.0.8/unread2calendar-thunderbird-3.0.8.xpi`
 
 ### 2) 在 Thunderbird 安装
 1. 打开 Thunderbird。
@@ -240,7 +240,7 @@
 - 开发日志：`docs/CHANGELOG.md`
 
 ## 版本与更新
-- 当前文档对应插件版本：`v3.0.7`
+- 当前文档对应插件版本：`v3.0.8`
 - 历史改动与每版说明：见 [docs/CHANGELOG.md](./docs/CHANGELOG.md)
 
 ---
