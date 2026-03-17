@@ -295,6 +295,7 @@ button:disabled {
 .hint {
   background: #fff8de;
   border-color: #efd37a;
+  color: #7c4a03;
 }
 
 .groups {

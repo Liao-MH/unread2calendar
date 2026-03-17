@@ -766,6 +766,8 @@ function renderAppearancePreview() {
   const defs = Array.isArray(state.groupDefinitions) ? state.groupDefinitions : [];
   const groups = defs.length > 0 ? defs : [{ id: 'preview-default', label: currentLang() === 'zh' ? '示例分组' : 'Sample Group' }];
 
+  const toolbarShell = document.createElement('div');
+  toolbarShell.className = 'preview-toolbar-shell';
   const toolbar = document.createElement('div');
   toolbar.className = 'preview-toolbar';
   const primary = document.createElement('button');
@@ -777,7 +779,37 @@ function renderAppearancePreview() {
   secondary.textContent = currentLang() === 'zh' ? '导入日历' : 'Import Calendar';
   toolbar.appendChild(primary);
   toolbar.appendChild(secondary);
-  appearancePreviewRoot.appendChild(toolbar);
+  const taskbar = document.createElement('div');
+  taskbar.className = 'preview-taskbar';
+  ['暂停', '继续', '取消任务'].forEach((labelZh, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.disabled = true;
+    button.textContent = currentLang() === 'zh'
+      ? labelZh
+      : ['Pause', 'Resume', 'Cancel'][index];
+    taskbar.appendChild(button);
+  });
+  toolbarShell.appendChild(toolbar);
+  toolbarShell.appendChild(taskbar);
+  appearancePreviewRoot.appendChild(toolbarShell);
+
+  const hint = document.createElement('section');
+  hint.className = 'preview-hint';
+  hint.textContent = currentLang() === 'zh'
+    ? 'LLM 未配置，正在使用本地规则。'
+    : 'LLM not configured. Running local rules.';
+  appearancePreviewRoot.appendChild(hint);
+
+  const empty = document.createElement('div');
+  empty.className = 'preview-empty';
+  empty.textContent = currentLang() === 'zh'
+    ? '暂无待办，请点击“扫描未读”或“刷新”'
+    : 'No todos yet. Click “Scan Unread” or “Refresh”.';
+  appearancePreviewRoot.appendChild(empty);
+
+  const groupsHost = document.createElement('div');
+  groupsHost.className = 'preview-groups';
 
   groups.forEach((def) => {
     const style = state.appearanceGroupStyles[def.id] || { accent: '#6b7280', bg: '' };
@@ -862,12 +894,34 @@ function renderAppearancePreview() {
         item.classList.toggle('is-collapsed', !collapsed);
       });
     });
-    appearancePreviewRoot.appendChild(group);
+    groupsHost.appendChild(group);
   });
+  appearancePreviewRoot.appendChild(groupsHost);
+
+  const importBtn = document.createElement('button');
+  importBtn.type = 'button';
+  importBtn.className = 'primary preview-import-btn';
+  importBtn.textContent = currentLang() === 'zh' ? '导入日历' : 'Import Calendar';
+  appearancePreviewRoot.appendChild(importBtn);
+
+  const importedHost = document.createElement('section');
+  importedHost.className = 'preview-imported-host';
+  const importedCard = document.createElement('div');
+  importedCard.className = 'preview-imported-card';
+  const importedLabel = document.createElement('span');
+  importedLabel.textContent = currentLang() === 'zh' ? '已添加日历 0' : 'Imported calendars 0';
+  const importedToggle = document.createElement('button');
+  importedToggle.type = 'button';
+  importedToggle.className = 'minor-btn';
+  importedToggle.textContent = currentLang() === 'zh' ? '展开' : 'Expand';
+  importedCard.appendChild(importedLabel);
+  importedCard.appendChild(importedToggle);
+  importedHost.appendChild(importedCard);
+  appearancePreviewRoot.appendChild(importedHost);
 
   const footer = document.createElement('div');
   footer.className = 'preview-footer';
-  footer.textContent = currentLang() === 'zh' ? '状态：示例预览，单击事件可展开/收起。' : 'Status: Preview mode, click item to expand/collapse.';
+  footer.textContent = currentLang() === 'zh' ? '状态：Ready.' : 'Status: Ready.';
   appearancePreviewRoot.appendChild(footer);
 }
 

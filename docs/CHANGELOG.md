@@ -1,5 +1,62 @@
 # Changelog
 
+## v3.0.7 - 2026-03-17
+
+### 用户问题
+- 用户指出真实窗口里 `LLM 未配置` 提示在深色主题下难以辨认
+- 用户指出主窗口预览里没有显现该提示信息，而且预览分组依旧被挤在一起，不能像真实窗口那样在中间区域滚动浏览
+
+### 讨论与决策摘要
+- 根因有两部分：
+  - 真实窗口的 `.hint` 使用浅黄色背景，但文字颜色继承主题文本色，深色主题下对比不足
+  - 主窗口预览仍是“单一滚动框里顺序堆叠所有内容”的简化结构，没有模拟真实第四栏的提示条、空状态和中间独立滚动区
+- 决策是：
+  - 真实窗口的提示条显式指定高对比文字颜色
+  - 主窗口预览重建为接近真实第四栏的壳层结构：顶部按钮区、提示条、空状态说明、中间可滚动分组区、导入按钮、已添加日历区、状态行
+
+### 已做改动
+- 版本号升级到 `3.0.7`
+- `thunderbird-addon/sidebar/panel.css`
+  - 为 `.hint` 增加显式高对比文字颜色，修复深色主题下的可读性
+- `thunderbird-addon/options/options.html`
+  - 预览壳层改为多行结构，不再把所有内容直接堆在一个滚动容器里
+  - 新增预览提示条、空状态行、独立滚动的分组区、导入区域和状态区域样式
+- `thunderbird-addon/options/options.js`
+  - 重建主窗口预览 DOM，使其包含真实窗口对应的提示条、空状态说明和底部区域
+  - 分组示例改为渲染到独立的 `preview-groups` 容器里，以便滚动浏览完整内容
+- `tests/empty-state-line.test.mjs`
+  - 新增断言，要求真实窗口提示条使用高对比文字颜色
+- `tests/options-groups-dnd-and-preview.test.mjs`
+  - 新增断言，要求主窗口预览采用独立滚动的中间分组区
+  - 新增断言，要求主窗口预览渲染提示条、空状态行和底部导入区域
+- `tests/release-version.test.mjs`
+  - 版本断言更新到 `v3.0.7`
+- `README.md` / `README.en.md`
+  - 当前文档版本与下载包名更新为 `v3.0.7`
+
+### 影响文件
+- `thunderbird-addon/sidebar/panel.css`
+- `thunderbird-addon/options/options.html`
+- `thunderbird-addon/options/options.js`
+- `tests/empty-state-line.test.mjs`
+- `tests/options-groups-dnd-and-preview.test.mjs`
+- `tests/release-version.test.mjs`
+- `thunderbird-addon/manifest.json`
+- `README.md`
+- `README.en.md`
+- `docs/CHANGELOG.md`
+
+### XPI 路径
+- `/Users/lmh/Library/CloudStorage/OneDrive-WashingtonUniversityinSt.Louis/email2calendar/email2calendar/dist/unread2calendar-thunderbird-3.0.7.xpi`
+
+### 验证结果
+- `node tests/empty-state-line.test.mjs`
+- `node tests/options-groups-dnd-and-preview.test.mjs`
+- `node tests/release-version.test.mjs`
+- `printf '%s\n' tests/*.test.mjs | sort | xargs -n1 node`
+- `git diff --check`
+- `bash scripts/build_thunderbird_xpi.sh`
+
 ## v3.0.6 - 2026-03-14
 
 ### 用户问题

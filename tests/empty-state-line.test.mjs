@@ -25,4 +25,10 @@ assert.match(
   'empty hint line should use subtle gray style'
 );
 
+assert.match(
+  css,
+  /\.hint\s*\{[\s\S]*color:\s*#7c4a03;/,
+  'setup hint should use an explicit high-contrast text color'
+);
+
 console.log('empty-state line tests passed');
